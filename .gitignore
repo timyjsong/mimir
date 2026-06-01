@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+# Node
+node_modules/
+.next/
+out/
+dist/
+build/
+# Env
+.env
+.env.local
+.env.*.local
+# IDE
+.vscode/
+.idea/
+*.swp
+# OS
+.DS_Store
+Thumbs.db
+*.Zone.Identifier
+# Logs
+*.log
+# Claude Code per-machine state
+.claude/settings.local.json
+.claude/worktrees/
+# BMAD personal config
+_bmad/config.user.toml
