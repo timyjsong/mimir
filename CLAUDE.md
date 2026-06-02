@@ -10,6 +10,8 @@ session here exists to improve, refine, and tune that skill.
 truth. (A brand-new `~/.claude/skills/mimir` symlink needs one CC restart to
 attach the first time; live thereafter.)
 
+**Public-destined — no secrets.** Treat everything in this repo as eventually public; keep it clean (no secrets/credentials). Private context + decision history live in this project's **auto-memory** (`~/.claude/`, local, not git-backed) — by design.
+
 ## Orient before you act
 
 This file is intentionally stateless: no status, no roadmap, no file map. Current
