@@ -4,7 +4,7 @@ The oracle for tuning Mimir. Each scenario pins **what good looks like** *before
 
 **Developer-facing.** The lead never reads this at runtime — it is NOT referenced from `SKILL.md`, so it costs zero lead context. Keep it that way.
 
-Reflects **Mimir v3**: an interactive lead that runs interactive planning skills **in-session**, delegates heavy/autonomous work to **fresh-context fire-and-return subagents**, and launches the loki build as a **workflow** — no Agent Teams. The retired v1 team-coordination scenarios (latest-wins, team takeover, TeamCreate capability check, SIGTERM-on-takeover) live in `_v1-archive/`.
+Reflects **Mimir v3**: an interactive lead that runs interactive planning skills **in-session**, delegates heavy/autonomous work to **fresh-context fire-and-return subagents**, and launches the loki build as a **workflow** — no Agent Teams. The retired v1 team-coordination scenarios (latest-wins, team takeover, TeamCreate capability check, SIGTERM-on-takeover) are gone — preserved in git history.
 
 ## How to read a scenario
 

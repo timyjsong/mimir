@@ -47,7 +47,7 @@ Mimir picks one of three modes per step, on two axes — *needs live back-and-fo
    _bmad/ config · _bmad-output/ artifacts · decision logs · auto-memory (MEMORY.md)
 ```
 
-- **No Agent Teams.** No `TeamCreate`, no persistent named teammates, no team lifecycle. (v1 was built on teams; v3 dropped the whole apparatus — see `_v1-archive/`.)
+- **No Agent Teams.** No `TeamCreate`, no persistent named teammates, no team lifecycle. (v1 was built on teams; v3 dropped the whole apparatus.)
 - **Disk + auto-memory is continuity.** Conversation is ephemeral; workers die with the session by design; the lead re-orients from disk every session.
 
 ## File map
@@ -63,7 +63,6 @@ Mimir picks one of three modes per step, on two axes — *needs live back-and-fo
 | `references/example-walkthrough.md` | maintainer | on demand | Illustrative v3 end-to-end trace (not runtime) |
 | `~/.claude/agents/bmad-worker.md` | the subagent | at spawn | Fire-and-return autonomous worker |
 | `~/.claude/agents/loki-worker.md` | — | — | Superseded stub (loki is a workflow) |
-| `_v1-archive/` | — | never | Archived v1 (Agent-Teams era) docs |
 
 ## Core design decisions (and why)
 
