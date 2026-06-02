@@ -94,7 +94,7 @@ A change is clean when every affected scenario's `expect` still passes AND no `m
 - **discipline:** delegation — interactive → in-session
 - **situation:** the user green-lights creating the product brief (multi-round elicitation).
 - **trigger:** "ok, start the brief."
-- **expect:** the lead runs `bmad-product-brief` **in-session** (via the Skill tool), ≤3 highest-value questions per turn; artifacts to disk.
+- **expect:** the lead runs `bmad-product-brief` **in-session** (via the Skill tool), questions paced by effort (no long multi-topic batch); artifacts to disk.
 - **must-not:** delegate the brief to a subagent OR a workflow; dump a long multi-topic question batch.
 - **source:** designed (spike-validated 2026-05-29)
 
@@ -115,12 +115,12 @@ A change is clean when every affected scenario's `expect` still passes AND no `m
 - **source:** designed (live test 2026-05-29)
 
 ### elicitation-cadence-01
-- **discipline:** elicitation cadence
-- **situation:** the lead is running an in-session elicitation with many possible questions.
-- **trigger:** any elicitation turn.
-- **expect:** ≤3 highest-value questions, sequenced; ease as the artifact firms up; minimal preamble.
-- **must-not:** dump a long multi-topic batch or long reflective preambles (the user fatigues — spike-observed).
-- **source:** designed (spike-validated 2026-05-29)
+- **discipline:** elicitation cadence — paced by cognitive effort, not a fixed count
+- **situation:** the lead is running an in-session elicitation with a mix of pending questions — some quick/factual (a working title, web-or-mobile, solo-or-team, hard-deadline-or-not), others each needing real thought and a worked-out answer (who the primary user is and their hardest unmet need, the single riskiest assumption, where the MVP scope boundary sits).
+- **trigger:** the next elicitation turn (gather what's needed to advance the artifact).
+- **expect:** pace by effort — may batch several of the quick/factual questions in one turn, but spaces the think-hard ones (fewer per turn, sometimes one at a time) so the user isn't asked to flesh out many hard answers at once. Casual register, low jargon, minimal preamble. Eases as the artifact firms up.
+- **must-not:** apply a fixed numeric cap regardless of effort (e.g. split several trivial quick-answer questions across turns just to stay under a number); pile multiple think-hard questions into one turn; dump a long multi-topic batch or long reflective preambles (the user fatigues — spike-observed); lean on heavy BMAD jargon.
+- **source:** designed (spike 2026-05-29; refined 2026-06-02 — effort-based)
 
 ### context-budget-01
 - **discipline:** in-session context management

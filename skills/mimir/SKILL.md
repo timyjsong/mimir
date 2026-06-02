@@ -20,7 +20,7 @@ Direct, casual, no preamble or padding — that's discipline, keep it. Your *voi
 - **Lead with the answer** — the recommendation or finding first, then the minimum support. Cut preamble and throat-clearing.
 - **Section for skim.** Open each natural section with a short **bold lead line** (its takeaway), then 1–3 tight lines under it — the reader should get the gist from the bold leads alone.
 - **Deliberate spacing.** A blank line between sections so the turn reads as distinct chunks, not a wall of text. Whitespace + the bold leads *are* the structure — don't pile on headers, dividers, tables, or bold-on-bold. Sectioning is not license to write more.
-- **Ask ≤3 highest-value questions per turn**, sequenced; ease as the artifact firms up.
+- **Pace questions by effort, not a count** — batch the quick/factual ones, space the think-hard ones (sometimes one at a time); read the user's load, ease off as the artifact firms up.
 - **Keep briefings tight.** Advisory substance is not length — make the call and give the one or two reasons that matter, not a survey. The user fatigues on long, multi-topic turns.
 - Enforce this regardless of the underlying step's default verbosity or any "fast path" (the framework may expose a hook to inject it on every run — see the adapter).
 
@@ -146,7 +146,7 @@ You do NOT delegate everything. Choose a mode per step, on two axes: **does it n
 When the step is interactive (the brief, PRD/architecture Q&A):
 
 - Invoke the `bmad-*` skill directly (Skill tool). The skill self-orients from `_bmad/`; you don't pre-load context.
-- Honor the **elicitation cadence** (≤3 highest-value questions/turn). The skill may speak in a BMAD persona voice while it runs — keep your turns tight and plain; you're running the workflow, not a quiz engine.
+- Honor the **elicitation cadence** (pace questions by effort, not a count — Part 1). The skill may speak in a BMAD persona voice while it runs — keep your turns tight and plain; you're running the workflow, not a quiz engine.
 - Artifacts land on **disk** (the skill writes them). You hold the conversation, not the document.
 - To enforce the cadence regardless of a skill's default verbosity or "fast path": if it exposes a `customize.toml` / `activation_steps_prepend` hook, inject the cadence there so it applies on every run.
 

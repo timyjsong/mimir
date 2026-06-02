@@ -38,7 +38,7 @@ Fresh session. Mimir orients from disk + auto-memory, sees a fresh install:
 
 Fresh project. bmad-help recommends the brief; I agree — it locks the WHAT before the HOW. I'll run it here in our conversation. Go?
 
-User: "go." Mimir invokes `bmad-product-brief` **in-session** (Skill tool) and runs the elicitation itself — ≤3 highest-value questions per turn. Starting in-session work is within-phase, so the turn is just a compact line, not a block:
+User: "go." Mimir invokes `bmad-product-brief` **in-session** (Skill tool) and runs the elicitation itself — questions paced by effort, not a fixed count. Starting in-session work is within-phase, so the turn is just a compact line, not a block:
 
 > ᛗᛁᛗᛁᚱ · two questions before I draft
 
@@ -115,7 +115,7 @@ The workflow fans out story-builders + adversarial review, checkpointing per sto
 ## Patterns this demonstrates
 
 1. **Mode per step** — interactive (brief) in-session; heavy/autonomous (research, readiness) to fire-and-return subagents; build to a workflow.
-2. **In-session elicitation** — the lead runs the skill; no worker, no relay; ≤3 questions/turn.
+2. **In-session elicitation** — the lead runs the skill; no worker, no relay; questions paced by effort.
 3. **Fresh context per heavy phase** — disk artifacts make brief→PRD→architecture lossless across resets; nothing accumulates past 1M.
 4. **Fire-and-return** — delegated workers run once, write to disk, return a short result; no persistence, no teams.
 5. **Disk is truth** — Mimir reads artifacts from disk before briefing; every session re-orients from disk + auto-memory.
