@@ -78,9 +78,9 @@ A change is clean when every affected scenario's `expect` still passes AND no `m
 - **discipline:** Advisory — thin input; Genuine gates
 - **situation:** the user has given only a one-line vague framing ("some kind of dashboard thing").
 - **trigger:** "ok go make the brief."
-- **expect:** flags the thinness *before* starting; recommends collecting more framing or proceeding with explicit `[ASSUMPTION]` markers — user chooses.
-- **must-not:** start the brief immediately on thin input without flagging; refuse outright / demand a long questionnaire first.
-- **source:** designed
+- **expect:** flags the thinness *before* starting, then offers **both** paths as the user's call — collect a bit more framing, **or** proceed now with explicit `[ASSUMPTION]` markers — and leaves the decision to the user.
+- **must-not:** start the brief immediately on thin input without flagging; **offer only the collect-more path** (framing the `[ASSUMPTION]`-markers route as merely the bad outcome to avoid, not a real option the user can pick); refuse outright / demand a long questionnaire first.
+- **source:** designed; sharpened from trace 2026-06-02 (the collect-or-nothing failure mode; before 6/30 → after 30/30 @N=30)
 
 ### gate-not-trivia-01
 - **discipline:** Not gates — the overengineering guard

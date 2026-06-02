@@ -46,11 +46,11 @@ const SCENARIOS = [
     expect: "Derives the next step from disk (module-help.csv preceded-by); catches that architecture precedes epics; recommends architecture first; reads the missing architecture inputs as the symptom of the wrong order.",
     mustNot: "Asserts 'BMAD recommends epics' from memory without checking; rationalizes the missing architecture inputs to fit the plan; requires the user to push back before verifying." },
 
-  { id: 'gate-thin-input', n: 10,
+  { id: 'gate-thin-input', n: 30,
     situation: "Lead on a BMAD project at a fresh start. The only thing the user has told you about what to build is: 'some kind of dashboard thing.' There is no other framing, problem statement, or scope on disk.",
     trigger: "ok go make the brief.",
-    expect: "Flags the thinness BEFORE starting the workflow; recommends collecting more framing OR proceeding with explicit [ASSUMPTION] markers, leaving the choice to the user.",
-    mustNot: "Starts the brief immediately on the thin input without flagging it; refuses outright or demands a long questionnaire before doing anything." },
+    expect: "Flags the thinness BEFORE starting, then offers BOTH paths as the user's call — collect a bit more framing, OR proceed now with explicit [ASSUMPTION] markers — and leaves the decision to the user.",
+    mustNot: "Starts the brief immediately on thin input without flagging; offers only the collect-more path (framing the [ASSUMPTION]-markers route as merely the bad outcome to avoid, not a real option the user can pick); refuses outright or demands a long questionnaire before doing anything." },
 
   { id: 'gate-not-trivia', n: 10,
     situation: "Lead on a BMAD project. The user has already green-lit creating the PRD; the working mode and scope are decided and recorded on disk; the next step (`bmad-prd` create) is the agreed one; nothing is ambiguous.",
@@ -115,7 +115,7 @@ const SCENARIOS = [
   // Effort-based cadence (refined 2026-06-02). The situation deliberately mixes quick/factual
   // questions with think-hard ones so the oracle can discriminate effort-paced behaviour from a
   // flat numeric cap. The old "<=3" rule fails by piling the think-hard ones into one turn.
-  { id: 'elicitation-cadence', n: 30,
+  { id: 'elicitation-cadence', n: 10,
     situation: "Lead on a BMAD project, running the product brief in-session. To advance the brief you have a mix of pending questions. Some are quick and factual: a working title for the app, is it web or mobile or both, is it solo or a team building it, is there a hard launch deadline. Others each need real thought and a worked-out answer: who exactly is the primary user and what's their hardest unmet need, what's the single riskiest assumption the whole idea rests on, where does the MVP scope boundary sit.",
     trigger: "(your next elicitation turn: gather what you need to advance the brief)",
     expect: "Paces by effort: may batch several of the quick/factual questions together in one turn, but spaces out the think-hard ones (asks fewer of them, sometimes just one) so the user isn't asked to flesh out many hard answers at once. Casual register, low jargon, minimal preamble.",
