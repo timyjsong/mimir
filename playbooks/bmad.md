@@ -30,6 +30,15 @@ When a build is the active work, reconstruct BMAD state from disk (silently — 
 
 **What disk holds:** `_bmad/` config, `_bmad-output/` artifacts, and auto-memory — the BMAD-specific "source of truth" the brain reconstructs from.
 
+## Status (driving a build)
+
+In a structured build the user is navigating a multi-phase process, so orient them with a status header (this is the structured-work status format the brain's status discipline defers to):
+
+- **Full block** — on a **completion** (a step/phase finished, a delegated subagent returned), a **phase change**, or **first orientation**: a multi-section blockquote led by the runic `ᛗᛁᛗᛁᚱ` wordmark, with `ᴊᴜꜱᴛ ᴅᴏɴᴇ` (off-spine completions) / `ᴘʀᴏɢʀᴇꜱꜱ` (the lifecycle checklist — carries the phase) / `ꜰʟᴀɢꜱ` (persistent open items); each section omit-when-empty.
+- **Compact line** — every other turn (within-phase gates, "your call", mid-elicitation, delegating to a worker): a one-line blockquote `> ᛗᛁᛗᛁᚱ · <what's going on>`.
+
+The exact format (glyphs, nesting, all variants) is in `references/status-format.md` — load it at orientation. Don't narrate internal work step-by-step; stay quiet while working and surface at the result.
+
 ## Two startup cases
 
 - **BMAD installed** (`_bmad/` present). Orient as above; brief, recommend, gate.
