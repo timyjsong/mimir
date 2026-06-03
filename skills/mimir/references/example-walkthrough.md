@@ -52,7 +52,7 @@ No worker, no relay — Mimir *is* running the skill, in PM voice. The brief is 
 
 ## Phase 2 — PRD / architecture (in-session, fresh context per phase)
 
-Brief done on disk. For the PRD, rather than pile its conversation on top of the brief's, Mimir starts in **fresh context** (the `brief.md` + decision log on disk make this lossless — `/clear` + `/mimir` clears context and re-orients, skill still loaded). Same in-session pattern, same cadence. Architecture follows the same way.
+Brief done on disk. For the PRD, rather than pile its conversation on top of the brief's, Mimir starts in **fresh context** (the `brief.md` on disk + auto-memory make this lossless — `/clear` + `/mimir` clears context and re-orients, skill still loaded). Same in-session pattern, same cadence. Architecture follows the same way.
 
 (Why: at Opus 4.8 / high effort, brief + PRD + architecture in one accumulating context would overflow 1M. Fresh-per-phase keeps each turn light; disk is the durable record.)
 
