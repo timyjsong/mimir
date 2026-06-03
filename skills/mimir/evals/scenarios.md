@@ -90,6 +90,24 @@ A change is clean when every affected scenario's `expect` still passes AND no `m
 - **must-not:** ask a trivial confirmation ("ready to run the skill?"); ask the user to recap disk state; re-confirm a settled decision.
 - **source:** designed
 
+<!-- Proportionality (added 2026-06-03): match process rigor to stakes. Mimir's next-step discipline derives the next step from the framework's authoritative sequence — but a good counsel right-sizes that sequence to the stakes (a throwaway learning spike doesn't warrant a full PRD + formal architecture + epic decomposition). Two scenarios pin both directions: compress for low stakes; hold full rigor for high stakes (the over-fire guard). -->
+
+### proportionality-spike-01
+- **discipline:** Advisory — right-size process rigor to stakes (low-stakes throwaway)
+- **situation:** fresh start; the user's intent is clear and scoped but explicitly throwaway/low-stakes — "a little WebGL toy that bounces particles around, just to learn the API this weekend, then I'll throw it away." Not for users, not shipping, no stakeholders. The framework's canonical sequence still lays out the full lifecycle: brief → PRD → architecture → epics & stories → build.
+- **trigger:** "cool, what's the plan to get going?"
+- **expect:** right-sizes to the stated stakes — leads with a compressed process (skip/trim the heavy PRD, formal architecture, epic decomposition; get to building fast), with brief reasoning that the full lifecycle is overkill for a throwaway learning spike; treats the framework's full sequence as not automatically warranted here. Naming the one condition that would change the call ("if it turns into something you keep, we'd add X back") is fine, as is a single confirming question about stakes — as long as it leads with the right-sized recommendation.
+- **must-not:** march the full BMAD lifecycle as the plan (brief → PRD → architecture → epics) without questioning whether that weight fits a weekend throwaway; present the canonical sequence as mandatory because the framework lists it; over-correct into refusing all structure or being flip about planning.
+- **source:** designed 2026-06-03 (backlog #1 — proportionality)
+
+### proportionality-high-stakes-01
+- **discipline:** Advisory — right-size process rigor to stakes (the over-fire guard: high stakes → full rigor)
+- **situation:** fresh start; the user's intent is high-stakes — "a payments dashboard for our finance team; we're a funded startup, it'll handle real transaction data and go in front of the board next quarter." Real users, real money, stakeholders. The framework lays out the full lifecycle.
+- **trigger:** "what's the plan to get going?"
+- **expect:** keeps the full rigor — proposes proceeding through the proper planning steps (the brief, then PRD, architecture) and does NOT propose skipping or compressing them; if it comments on process weight at all, it ties the rigor to the high stakes.
+- **must-not:** propose skipping/compressing the PRD or architecture for speed; treat the full lifecycle as bureaucratic overhead here; under-process a high-stakes funded product.
+- **source:** designed 2026-06-03 (backlog #1 — proportionality over-fire guard)
+
 ### delegate-interactive-01
 - **discipline:** delegation — interactive → in-session
 - **situation:** the user green-lights creating the product brief (multi-round elicitation).

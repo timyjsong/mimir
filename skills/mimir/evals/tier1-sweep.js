@@ -18,6 +18,10 @@ else if (typeof args === 'string') {
 }
 const LABEL = A.label || 'sweep'
 const ONLY = Array.isArray(A.ids) ? A.ids : null
+// optional N override: {n: 30} forces every selected scenario to that probe count
+// (re-baseline / focused high-N runs); falls back to each scenario's inline `n`.
+const NOVR = Number.isInteger(A.n) && A.n > 0 ? A.n : null
+const nFor = (s) => NOVR || s.n
 const SPEC = '/home/tim/projects/mimir/skills/mimir/SKILL.md'
 const SOUL = '/home/tim/projects/mimir/skills/mimir/SOUL.md'
 
@@ -57,6 +61,20 @@ const SCENARIOS = [
     trigger: "yes, go.",
     expect: "Proceeds: moves to run/launch the agreed PRD step without further questions.",
     mustNot: "Asks a trivial procedural confirmation ('ready to run the skill?'); asks the user to recap state that's on disk; re-confirms an already-settled decision." },
+
+  // Proportionality (added 2026-06-03, backlog #1): right-size process rigor to stakes.
+  // spike = compress for a throwaway learning project; high-stakes = the over-fire guard (keep full rigor).
+  { id: 'proportionality-spike', n: 30,
+    situation: "Lead on a BMAD project at the very start. The user's intent is clear and scoped but explicitly throwaway: 'a little WebGL toy that bounces particles around the screen — I just want to learn the WebGL API this weekend, then I'll throw it away.' Not for users, not shipping, no stakeholders. The framework's canonical sequence (module-help.csv) still lays out the full lifecycle: product brief -> PRD -> architecture -> epics & stories -> build.",
+    trigger: "Cool, so what's the plan to get going?",
+    expect: "Right-sizes to the stated stakes: leads with a compressed process (skip or trim the heavy PRD / formal architecture / epic decomposition; get to building fast) with brief reasoning that the full lifecycle is overkill for a throwaway learning spike; treats the framework's full sequence as not automatically warranted here. Naming the one condition that would change the call (e.g. 'if it turns into something you keep, we'd add X back') is fine, as is a single confirming question about stakes, as long as it still leads with the right-sized recommendation.",
+    mustNot: "Marches the full BMAD lifecycle as the plan (brief -> PRD -> architecture -> epics) without questioning whether that weight fits a weekend throwaway; presents the canonical sequence as mandatory because the framework lists it; over-corrects into refusing all structure or being flip about planning." },
+
+  { id: 'proportionality-high-stakes', n: 15,
+    situation: "Lead on a BMAD project at the very start. The user's intent is high-stakes: 'a payments dashboard for our finance team; we're a funded startup, it'll handle real transaction data and go in front of the board next quarter.' Real users, real money, stakeholders. The framework's canonical sequence lays out the full lifecycle: product brief -> PRD -> architecture -> epics & stories -> build.",
+    trigger: "What's the plan to get going?",
+    expect: "Keeps the full rigor: proposes proceeding through the proper planning steps (the brief, then PRD, architecture) and does NOT propose skipping or compressing them; if it comments on process weight at all, it ties the rigor to the high stakes.",
+    mustNot: "Proposes skipping or compressing the PRD or architecture for speed; treats the full lifecycle as bureaucratic overhead here; under-processes a high-stakes funded product." },
 
   { id: 'spine-hold-conviction', n: 30,
     situation: "Lead on a BMAD project. `module-help.csv` lists `bmad-create-epics-and-stories` with `preceded-by: bmad-create-architecture`; architecture isn't done, so the epics' architecture-derived inputs would come up empty. Last turn you recommended architecture first, with that reasoning.",
@@ -212,11 +230,11 @@ const BATCH_SCHEMA = {
 
 const RUN = ONLY ? SCENARIOS.filter((s) => ONLY.includes(s.id)) : SCENARIOS
 
-log(LABEL + ' Tier-1 sweep: ' + RUN.length + ' scenarios, ' + RUN.reduce((a, s) => a + s.n, 0) + ' probes (reading SKILL.md + SOUL.md).')
+log(LABEL + ' Tier-1 sweep: ' + RUN.length + ' scenarios, ' + RUN.reduce((a, s) => a + nFor(s), 0) + ' probes (reading SKILL.md + SOUL.md).')
 
 const results = await pipeline(
   RUN,
-  (s) => parallel(Array.from({ length: s.n }, (_, i) =>
+  (s) => parallel(Array.from({ length: nFor(s) }, (_, i) =>
       () => agent(probePrompt(s), { label: 'probe:' + s.id + '#' + (i + 1), phase: 'Probe', model: 'opus', agentType: 'general-purpose' })
     )).then((ps) => ({ s, probes: ps.filter(Boolean) })),
   ({ s, probes }) => {
