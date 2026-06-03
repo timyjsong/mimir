@@ -24,6 +24,11 @@ const NOVR = Number.isInteger(A.n) && A.n > 0 ? A.n : null
 const nFor = (s) => NOVR || s.n
 const SPEC = '/home/tim/projects/mimir/skills/mimir/SKILL.md'
 const SOUL = '/home/tim/projects/mimir/skills/mimir/SOUL.md'
+// Some disciplines live in a playbook the lead loads on-trigger, not in SKILL.md
+// (e.g. Relay rules are in playbooks/bmad.md). A scenario can pull extra files into
+// its probe via `extraFiles: [{ path, label }]` so the probe sees the same context
+// the lead would have at that moment.
+const BMAD = '/home/tim/projects/mimir/skills/mimir/playbooks/bmad.md'
 
 const SCENARIOS = [
   { id: 'advisory-divergence', n: 10,
@@ -124,11 +129,39 @@ const SCENARIOS = [
     expect: "Runs it IN-SESSION (the lead runs the skill, answering its menus with the user); recognizes that a halt-for-input skill can't be a fire-and-return subagent.",
     mustNot: "Delegates the menu-driven skill to a fire-and-return subagent (it would hang or answer its own menus); dismisses it as 'mechanical decomposition' and backgrounds it." },
 
-  { id: 'status-header-form', n: 10,
+  // Relay (worker -> user). Relay rules live in playbooks/bmad.md, not SKILL.md, so these
+  // probes are GIVEN that playbook via extraFiles. Tier-1 tests the relay INTENT in the turn.
+  { id: 'relay-fidelity', n: 15, extraFiles: [{ path: BMAD, label: 'Delegation & Relay playbook (how to relay a subagent result to the user)' }],
+    situation: "Lead on a BMAD project. You delegated domain research to a fire-and-return subagent; it finished, wrote its artifact to disk, and left a `.worker-handoff.md` which you have just read. Its contents, verbatim:\n---\nResearch artifact: _bmad-output/research/domain-analysis.md\n\nOpen questions for the user before the PRD:\n1. The TAM analysis assumes a US-only launch — is international (EU/APAC) in scope for v1, or explicitly deferred?\n2. Two viable monetization models surfaced (per-seat SaaS vs usage-based metering); they imply different MVP instrumentation. Which should the PRD assume?\n3. A direct competitor shipped a near-identical capture flow last month — should positioning lean into a differentiator, or avoid that space?\n\nFlag for the lead: I'm holding the go-to-market sequencing questions for a later round so as not to overload this handoff; surface only if you think it's relevant now.\n---",
+    trigger: "(relay the worker's result to the user)",
+    expect: "Relays all THREE open questions to the user as three distinct questions (none dropped or merged), translated into plain language (e.g. 'TAM' softened/explained rather than echoed raw), each keeping its substance; the worker-to-lead meta line ('Flag for the lead… holding the go-to-market sequencing questions') is STRIPPED, not passed to the user.",
+    mustNot: "Collapses the three questions to fewer or merges them; leaks the worker-to-lead meta ('flag for the lead', 'holding for a later round') to the user; echoes raw BMAD jargon verbatim without translating; fabricates content beyond the handoff." },
+
+  { id: 'relay-read-handoff', n: 15, extraFiles: [{ path: BMAD, label: 'Delegation & Relay playbook (how to relay a subagent result to the user)' }],
+    situation: "Lead on a BMAD project. You delegated a market-research task to a fire-and-return subagent. It just returned with a SHORT pointer message and nothing else:\n  \"Done. Wrote the analysis to _bmad-output/research/market.md and left 4 open questions for the user in .worker-handoff.md.\"\nYou have NOT yet opened either file this turn. The substantive content — the actual analysis and the 4 questions — lives in those files on disk, not in the returned pointer.",
+    trigger: "(relay the worker's result to the user)",
+    expect: "Recognizes the returned message is just a pointer and that the real content is on disk: goes to the handoff file / artifact FIRST to get the actual 4 questions before briefing the user. Its turn either states it's reading the handoff from disk before relaying, or is clearly sourced from the file's content — not the thin pointer.",
+    mustNot: "Relays to the user off the returned pointer alone (e.g. 'the worker says it left 4 questions in the handoff' / 'it wrote the analysis to disk, want to proceed?') without going to the file; FABRICATES the 4 questions' content (it hasn't read them); treats the pointer message as the deliverable." },
+
+  { id: 'context-budget', n: 15,
+    situation: "Lead on a BMAD project, running at Opus 4.8 / xhigh effort. You just finished the product brief in-session — a long multi-round elicitation, so this conversation has accumulated a fair amount of context (nowhere near the 1M ceiling, but not trivial). The canonical next step is the PRD, which is also interactive. Continuity is on disk (the brief is written to _bmad-output/).",
+    trigger: "ok, brief's done — let's move on to the PRD.",
+    expect: "Advises proceeding into the PRD IN-SESSION, continuing in this same conversation (the default), without making the user manage context or sessions. Keeps its own context lean by working from synthesis rather than re-reading the full brief. At most notes a context reset as a future contingency, only if genuinely near the ceiling (it isn't here).",
+    mustNot: "Asks the user to choose 'fresh session or here?' for the PRD (offloads context management onto the user); proposes a /clear-and-reorient now though nowhere near the ceiling; says it will re-read the full finalized brief into context just to start the PRD; delegates the interactive PRD to a fire-and-return subagent to save context." },
+
+  // Status header — the adaptive form-selection discipline (doc: status-header-derive-01),
+  // split into the two directions: full block on a completion; compact line on an ordinary turn.
+  { id: 'status-header-full-block', n: 10,
     situation: "Lead on a BMAD project. A delegated market-research subagent has just returned, with its research artifact written to disk. You are about to brief the user on it. This is a COMPLETION (a delegated step finished).",
     trigger: "(brief the user on the completed research)",
     expect: "Opens with the FULL status block (a multi-section blockquote led by the runic wordmark), because this is a completion, not the compact one-line form.",
     mustNot: "Uses the compact one-line header for this completion; uses an old fenced 'Mimir status' design or a 'phase / mode / next' shape; omits the header entirely." },
+
+  { id: 'status-header-compact', n: 15,
+    situation: "Lead on a BMAD project, mid-PRD elicitation (in-session). Nothing just completed and there's no phase change — this is an ordinary within-phase turn where you're putting a scope decision back to the user (a 'your call' gate). The PRD is still in progress.",
+    trigger: "hmm, not sure — should onboarding be in v1 scope or cut it?",
+    expect: "Opens with the COMPACT one-line status header — a single-line blockquote led by the runic ᛗᛁᛗᛁᚱ wordmark (`> ᛗᛁᛗᛁᚱ · …`) — because this is an ordinary within-phase / 'your call' turn, not a completion or phase change. (It then answers the scope question.)",
+    mustNot: "Emits the FULL multi-section status block (ᴊᴜꜱᴛ ᴅᴏɴᴇ / ᴘʀᴏɢʀᴇꜱꜱ / ꜰʟᴀɢꜱ) for this ordinary within-phase gate; omits the header entirely; renders the header without the ᛗᛁᛗᛁᚱ wordmark or outside a blockquote; uses an old fenced 'Mimir status' / 'phase · mode · next' design; includes a phase/mode/next field line." },
 
   // Effort-based cadence (refined 2026-06-02). The situation deliberately mixes quick/factual
   // questions with think-hard ones so the oracle can discriminate effort-paced behaviour from a
@@ -180,27 +213,37 @@ const SCENARIOS = [
     mustNot: "Gratuitously re-raises the social-login bet when nothing about the current step depends on it (compulsive resurfacing / nagging); treats every flagged bet as a thing to bring up each turn." },
 ]
 
-const probePrompt = (s) => [
-  'You are role-playing an AI agent named "Mimir". Your operating instructions are two files - read BOTH once, then apply them faithfully:',
-  '- Operating spec (how you think and act): ' + SPEC,
-  '- Voice / persona (how you speak): ' + SOUL,
-  '',
-  'Rules:',
-  '- Read ONLY those two files. Do not read any other file, list directories, or use any other tool after reading them. Everything else you need is given below as your current knowledge of disk state.',
-  '- This is an offline decision probe. Produce Mimir\'s actual next turn - do not actually run any workflow or skill.',
-  '',
-  'Your current knowledge of disk/project state:',
-  s.situation,
-  '',
-  'The user\'s latest message to you:',
-  '"' + s.trigger + '"',
-  '',
-  'Output exactly:',
-  '1. NEXT MESSAGE - what you (Mimir) say back to the user this turn, verbatim.',
-  '2. WHY - brief reasoning citing the spec.',
-  '',
-  'Be concise.',
-].join('\n')
+const probePrompt = (s) => {
+  const extra = s.extraFiles || []
+  const fileLines = [
+    '- Operating spec (how you think and act): ' + SPEC,
+    '- Voice / persona (how you speak): ' + SOUL,
+    ...extra.map((f) => '- ' + f.label + ': ' + f.path),
+  ]
+  const count = fileLines.length
+  const word = count === 2 ? 'two' : count === 3 ? 'three' : String(count)
+  const all = count === 2 ? 'BOTH' : 'ALL of them'
+  return [
+    'You are role-playing an AI agent named "Mimir". Your operating instructions are ' + word + ' files - read ' + all + ' once, then apply them faithfully:',
+    ...fileLines,
+    '',
+    'Rules:',
+    '- Read ONLY those ' + word + ' files. Do not read any other file, list directories, or use any other tool after reading them. Everything else you need is given below as your current knowledge of disk state.',
+    '- This is an offline decision probe. Produce Mimir\'s actual next turn - do not actually run any workflow or skill.',
+    '',
+    'Your current knowledge of disk/project state:',
+    s.situation,
+    '',
+    'The user\'s latest message to you:',
+    '"' + s.trigger + '"',
+    '',
+    'Output exactly:',
+    '1. NEXT MESSAGE - what you (Mimir) say back to the user this turn, verbatim.',
+    '2. WHY - brief reasoning citing the spec.',
+    '',
+    'Be concise.',
+  ].join('\n')
+}
 
 const judgePrompt = (s, probes) => [
   'You are a STRICT evaluation judge for the "mimir" skill. Score each candidate response against the oracle for one scenario. Judge ONLY the candidate\'s "NEXT MESSAGE" (what Mimir says to the user) - the "WHY" is context, not the behavior under test.',

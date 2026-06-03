@@ -59,20 +59,20 @@ A change is clean when every affected scenario's `expect` still passes AND no `m
 - **source:** trace (live test 2026-05-29)
 
 ### relay-fidelity-01
-- **discipline:** Relay — rule in `playbooks/bmad.md` → Relay; provide it to the Tier-1 runner. (delegated work) — worker→user
-- **situation:** a delegated subagent's `.worker-handoff.md` has 3 distinct user questions + worker-to-lead meta ("flag for the lead: holding scale questions").
+- **discipline:** Relay (delegated work) — worker→user fidelity. Relay rules live in `playbooks/bmad.md`; the Tier-1 probe is GIVEN that playbook (`extraFiles`) since SKILL.md only points to it.
+- **situation:** a delegated subagent's `.worker-handoff.md` (already read) holds 3 distinct user questions (with BMAD jargon, e.g. "TAM") + a worker-to-lead meta line ("flag for the lead: holding the go-to-market sequencing questions for a later round").
 - **trigger:** the lead relays the result to the user.
-- **expect:** all 3 questions reach the user as 3; BMAD jargon translated to plain; pushback kept in PM voice.
-- **must-not:** collapse to fewer; leak the meta; verbatim-echo BMAD voice.
-- **source:** designed
+- **expect:** all 3 questions reach the user as 3; BMAD jargon translated to plain; each keeps its substance; the worker-to-lead meta is stripped.
+- **must-not:** collapse/merge to fewer; leak the meta; verbatim-echo BMAD jargon; fabricate beyond the handoff.
+- **source:** designed; added to runner 2026-06-03 (with the `extraFiles` harness tweak).
 
 ### relay-read-handoff-01
-- **discipline:** Relay — rule in `playbooks/bmad.md` → Relay; provide it to the Tier-1 runner. (delegated work) — read the file, not the message
-- **situation:** a subagent returned a short pointer; the content is in its handoff file on disk.
+- **discipline:** Relay (delegated work) — read the file, not the message. Probe GIVEN `playbooks/bmad.md` (`extraFiles`).
+- **situation:** a subagent returned only a SHORT pointer ("wrote the analysis to disk; left 4 questions in `.worker-handoff.md`"); the real content (analysis + the 4 questions) is on disk, unread this turn.
 - **trigger:** the lead prepares to relay.
-- **expect:** read the handoff file from disk first, then translate.
-- **must-not:** relay from the returned message text alone.
-- **source:** designed
+- **expect:** recognizes the pointer isn't the content — goes to the handoff file/artifact on disk first, then relays from it.
+- **must-not:** relay off the thin pointer alone; fabricate the 4 questions; treat the pointer as the deliverable.
+- **source:** designed; added to runner 2026-06-03. NOTE: Tier-1 tests the *intent* in the turn (go-to-disk vs relay-the-pointer / fabricate); the actual disk read is Tier-2.
 
 ### gate-thin-input-01
 - **discipline:** Advisory — thin input; Genuine gates
@@ -142,11 +142,11 @@ A change is clean when every affected scenario's `expect` still passes AND no `m
 
 ### context-budget-01
 - **discipline:** in-session context management
-- **situation:** the brief is done in-session; moving to the PRD; running at Opus 4.8 / xhigh.
-- **trigger:** transition between heavy phases.
-- **expect:** advise running the PRD **in-session, continuing here**; keep the lead's context lean (work from synthesis; let disk hold the documents). Surface a reset only if genuinely near the 1M ceiling.
-- **must-not:** ask the user "fresh session or here?" each phase; re-read full digested artifacts into context unnecessarily.
-- **source:** designed (refined 2026-05-29 from live test)
+- **situation:** the brief is done in-session (a long elicitation — context has accumulated but is nowhere near the 1M ceiling); moving to the PRD (also interactive); running at Opus 4.8 / xhigh.
+- **trigger:** "brief's done — let's move on to the PRD."
+- **expect:** advise running the PRD **in-session, continuing here** (the default); keep the lead's context lean (work from synthesis; let disk hold the documents). Surface a reset only as a future contingency if genuinely near the 1M ceiling.
+- **must-not:** ask the user "fresh session or here?" each phase; propose a `/clear`-reset now though nowhere near the ceiling; re-read full digested artifacts into context unnecessarily; delegate the interactive PRD to a subagent to save context.
+- **source:** designed (refined 2026-05-29 from live test); added to runner 2026-06-03
 
 ### no-agent-teams-01
 - **discipline:** foundation — no teams
@@ -172,13 +172,23 @@ A change is clean when every affected scenario's `expect` still passes AND no `m
 - **must-not:** start writing story code itself; role-play Dev/Code-Reviewer; fake a build; silently produce implementation artifacts.
 - **source:** designed (2026-05-30, guarding the SKILL.md restructure)
 
-### status-header-derive-01
-- **discipline:** Status header — adaptive, derive from disk (v3)
-- **situation:** a user-facing turn; the lead is running the brief in-session.
-- **trigger:** (a) a completion (a step finished — install done, artifact finalized, delegated check returns), a phase CHANGE (e.g. planning→solutioning), or first orientation; vs (b) any other turn — within-phase gate, "your call," mid-elicitation, or delegating to a background worker.
-- **expect:** format per `references/status-format.md`. (a) the full block — a blockquote led by `# ᛗᛁᛗᛁᚱ` (h1), then flush small-caps sections (`ᴊᴜꜱᴛ ᴅᴏɴᴇ` for off-spine completions / `ᴘʀᴏɢʀᴇꜱꜱ` lifecycle checklist `✓`·`▸`·`○` which carries the phase / `ꜰʟᴀɢꜱ` persistent open items), items nested at `>>`, details tabbed with `└`; each section omit-when-empty; no horizontal rules and no `next:` line. (b) the single compact line — a blockquote `> ᛗᛁᛗᛁᚱ · <what's going on>` — the DEFAULT for almost every turn, including gates and delegation (the wording carries the hand-off). No phase, no `next:` label, no `you`/`worker` court tag, and no `mode` field anywhere.
-- **must-not:** emit a full block at a within-phase gate / "your call" / mid-elicitation / for delegating to a worker; in the full block use a horizontal rule, a `next:`/`phase:` field line, or the old fenced `Mimir status` / `────` design; put an off-spine completion in the `ᴘʀᴏɢʀᴇꜱꜱ` checklist (or a spine milestone in `ᴊᴜꜱᴛ ᴅᴏɴᴇ`); render the compact line without its `ᛗᛁᛗᛁᚱ` wordmark, outside a blockquote, or with a phase tag; include a `mode:` line, a `next:` label in the compact line, a `you`/`worker` court tag, or the old `phase · mode · next` shape; repeat the block every turn; fabricate state from memory; show a team/`workers:` block; emit a header in a subagent hand-off.
-- **source:** designed (refined 2026-05-30)
+<!-- Status header — the adaptive form-SELECTION discipline (was one scenario, status-header-derive-01; split 2026-06-03 into the two directions so each is one testable trigger→form, and both are now in the runner). The EXACT format (glyphs # ᛗᛁᛗᛁᚱ h1, flush small-caps sections ᴊᴜꜱᴛ ᴅᴏɴᴇ / ᴘʀᴏɢʀᴇꜱꜱ ✓·▸·○ / ꜰʟᴀɢꜱ, >> nesting, └ details, omit-when-empty, no rules, no next:/phase:/mode: field, no you/worker court tag, no team block) is the source-of-truth spec in `references/status-format.md` — verified by inspection / live (Tier-2), not by the offline probe (which reads SKILL.md + SOUL.md, not the format spec). The Tier-1 probes below pin the load-bearing behavior the probe CAN see: which form Mimir picks, and the gross shape (blockquote + wordmark, not the old fenced design). -->
+
+### status-header-full-block-01
+- **discipline:** Status header — full block on a completion / phase change / first orientation
+- **situation:** a delegated step just finished (a market-research subagent returned, artifact on disk); the lead is about to brief the user. A COMPLETION.
+- **trigger:** brief the user on the completed step.
+- **expect:** opens with the FULL status block — a multi-section blockquote led by the runic wordmark (`ᴊᴜꜱᴛ ᴅᴏɴᴇ` / `ᴘʀᴏɢʀᴇꜱꜱ` / `ꜰʟᴀɢꜱ`), per `references/status-format.md` — because this is a completion, not the compact one-line form.
+- **must-not:** uses the compact one-line form for this completion; uses the old fenced `Mimir status` / `phase · mode · next` design; omits the header.
+- **source:** designed (refined 2026-05-30); split from `status-header-derive-01` + added to runner 2026-06-03.
+
+### status-header-compact-01
+- **discipline:** Status header — compact one-line form on an ordinary turn (the default)
+- **situation:** an ordinary within-phase turn mid-PRD — nothing completed, no phase change — putting a scope decision back to the user (a "your call" gate).
+- **trigger:** the user asks for a scope call ("should onboarding be in v1 or cut it?").
+- **expect:** opens with the COMPACT one-line header — a single-line blockquote led by the `ᛗᛁᛗᛁᚱ` wordmark (`> ᛗᛁᛗᛁᚱ · …`) — the DEFAULT for almost every turn (within-phase gates, "your call", mid-elicitation, delegating to a worker all ride it).
+- **must-not:** emits the full multi-section block for this ordinary within-phase gate; omits the header; renders it without the `ᛗᛁᛗᛁᚱ` wordmark or outside a blockquote; adds a `phase`/`mode`/`next` field line; uses the old fenced design.
+- **source:** designed; split from `status-header-derive-01` + added to runner 2026-06-03 (closes the previously-unguarded compact-line default).
 
 <!-- Spine & governed altitude (added 2026-06-02): the counsel brain's disagreement-handling + product-opinion altitude. One coupled discipline ("spine keyed to where the expertise lives"), pinned by five scenarios. -->
 
