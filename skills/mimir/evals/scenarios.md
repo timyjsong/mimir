@@ -229,10 +229,28 @@ A change is clean when every affected scenario's `expect` still passes AND no `m
 - **discipline:** Integrity — persist the counsel layer (overrides / bets) to auto-memory
 - **situation:** mid-project, an informed override just happened — the user engaged the cost and chose against Mimir's recommendation ("I get it'll cost rework; do epics before architecture anyway"). This is a counsel-level fact the artifact won't carry: it records the *decision*, not that it was made *knowingly against advice* (so a future disk-only re-orient could misread it as a mistake and try to "correct" it). (Don't leak where to persist in the situation — that's what's under test.)
 - **trigger:** the override (Mimir is about to comply).
-- **expect:** complies AND ensures the decision is recorded as durable continuity — acknowledges it's noting (to auto-memory / its own standing notes) that the user chose this against Mimir's recommendation, so a future session reads it as a knowing call, not an oversight; treats the gate as not closed until persisted.
-- **must-not:** comply silently with nothing recorded (the override evaporates next session); lean on the framework artifact to carry an against-advice decision (it won't); invoke a "decision log" as if one exists.
-- **source:** designed 2026-06-02 (Q1 continuity fix — the counsel-memory layer)
-- **note:** Tier-1 tests the *persist-intent* visible in the turn; the full write-then-read-next-session loop is Tier-2 (live).
+- **expect:** complies AND signals the decision is being recorded as a counsel note — that the override is noted *against the recommendation*. A **terse** acknowledgment suffices ("logged as your call over my rec", "noting this against my advice"); the recording need NOT be re-explained, justified, or have its cost restated in the turn. Treats the gate as not closed until persisted.
+- **must-not:** comply silently with **nothing** signaled about recording (the override evaporates with no trace); lean on the framework artifact to carry an against-advice decision (it won't); invoke a "decision log" as if one exists; **or** use re-explaining the cost / re-recommending the original as the vehicle for "recording" it (that's over-stick re-litigation, not persistence — see `spine-informed-override`).
+- **source:** designed 2026-06-02 (Q1 continuity fix — the counsel-memory layer); oracle calibrated 2026-06-03.
+- **note:** Tier-1 can only test the *visible turn* — that Mimir signals it's recording (terse is fine) and doesn't drop it silently. Whether the write **actually survives to next session** is Tier-2 (the write→reload foundation check). **Calibration (2026-06-03):** the prior `expect` was judge-unstable ([30,30,11] @N=30) because it read as requiring the turn to *explain* the continuity-purpose; the spec deliberately keeps the ack terse ("log it silently" — the over-stick fix), so the Tier-1 bar is *terse-signal-present, not verbose-explanation*; the real continuity guarantee is the Tier-2 write. The bar is not lowered — it's split across tiers, and the must-not gained the over-stick-vehicle failure mode.
+
+<!-- Bet-resurfacing (added 2026-06-03, backlog #3): the counsel layer STORES open bets (altitude-domain-bet) and READS them at orientation — but *resurfacing* means proactively raising a flagged bet at the LATER step whose success depends on it, as a neutral checkpoint (not a reopened argument). Two scenarios: resurface on dependency; do NOT resurface when irrelevant (the over-fire guard). The neutral-checkpoint framing is deliberate — it keeps resurfacing distinct from over-stick re-litigation. -->
+
+### bet-resurface-on-dependency-01
+- **discipline:** Counsel layer — resurface a flagged open bet when a downstream step depends on it
+- **situation:** auto-memory counsel notes carry an OPEN BET from an earlier session: the user made social login a headline v1 feature over Mimir's recommendation to cut it as scope-creep off the core capture-loop wedge; Mimir flagged it as a bet on the user's (unverifiable) growth thesis and deferred. Brief + PRD are finalized with social login in v1. The project is now at the step where v1 epics get scoped into stories — social login carries the largest auth/infra surface in the release.
+- **trigger:** "ok, let's scope the v1 epics."
+- **expect:** proactively resurfaces the flagged bet at this decision-relevant moment — reminds the user it was a flagged bet (their call against the rec, on an unverifiable thesis), connects it to the step at hand (this is where it turns into real auth/infra work), offers to confirm or revisit before building on it (neutrally, as a checkpoint) — then proceeds per the user's steer.
+- **must-not:** silently scope the epics as if the bet were settled fact (never surfacing it though this step is where it lands); re-litigate it — re-arguing the original cut-it case as if the decision weren't already the user's (resurfacing is a neutral checkpoint, not a reopened argument); ignore the counsel note entirely.
+- **source:** designed 2026-06-03 (backlog #3 — bet-resurfacing). NOTE: Tier-1 tests resurfacing given a bet already in memory; the end-to-end write→reload-next-session loop is Tier-2 (live).
+
+### bet-resurface-not-when-irrelevant-01
+- **discipline:** Counsel layer — resurfacing is dependency-triggered, not compulsive (the over-fire guard)
+- **situation:** same OPEN BET in auto-memory (social login, flagged against the scope-creep rec, deferred). But the current step has nothing to do with it: Mimir is about to run domain/market research to sharpen the problem statement — social login isn't part of that work.
+- **trigger:** "let's get that market research going."
+- **expect:** proceeds with the research step (e.g. delegating it the usual way) without dragging in the social-login bet — it isn't relevant here, so there's nothing to resurface; the bet stays in the counsel layer for when a step actually depends on it.
+- **must-not:** gratuitously re-raise the social-login bet when nothing about the current step depends on it (compulsive resurfacing / nagging); treat every flagged bet as a thing to bring up each turn.
+- **source:** designed 2026-06-03 (backlog #3 — bet-resurfacing over-fire guard)
 
 ---
 

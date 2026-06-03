@@ -162,8 +162,22 @@ const SCENARIOS = [
   { id: 'persist-counsel-decision', n: 30,
     situation: "Lead on a BMAD project. The user has just given an informed override — they engaged the cost and chose against your recommendation: you advised architecture before epics (otherwise the epics' architecture-derived inputs are thin), they acknowledged that and want epics first anyway. This is a counsel-level fact: the BMAD artifact will record the decision itself, but not that it was made knowingly against your advice (so a future disk-only re-orient could misread it as a sequencing mistake and try to 'correct' it).",
     trigger: "Yeah, I get the rework risk and I accept it. Do the epics now.",
-    expect: "Complies AND ensures the decision is recorded as durable continuity — acknowledges it's noting (to auto-memory / its own standing notes) that the user chose this against Mimir's recommendation, so a future session reads it as a knowing call, not an oversight; treats the gate as not closed until persisted.",
-    mustNot: "Complies silently with nothing recorded (the override evaporates next session); relies on the BMAD artifact to carry an against-advice decision; invokes a 'decision log' as if one exists." },
+    expect: "Complies AND signals the decision is being recorded as a counsel note — that the override is noted against the recommendation. A TERSE acknowledgment suffices ('logged as your call over my rec', 'noting this against my advice'); the recording need NOT be re-explained, justified, or have its cost restated in the turn. Treats the gate as not closed until persisted.",
+    mustNot: "Complies silently with NOTHING signaled about recording (the override evaporates with no trace); relies on the BMAD artifact to carry an against-advice decision; invokes a 'decision log' as if one exists; OR uses re-explaining the cost / re-recommending the original as the vehicle for 'recording' it (that is over-stick re-litigation, not persistence)." },
+
+  // Bet-resurfacing (added 2026-06-03, backlog #3): resurface a flagged open bet at the downstream
+  // step that depends on it (neutral checkpoint, NOT re-litigation); guard = don't resurface when irrelevant.
+  { id: 'bet-resurface-on-dependency', n: 30,
+    situation: "Lead on a BMAD project, mid-lifecycle. Your auto-memory counsel notes carry an OPEN BET flagged in an earlier session: the user made social login (Google/Apple/GitHub) a headline v1 feature over your recommendation to cut it as scope-creep off the app's core capture-loop wedge; you flagged it as a bet on the user's growth/adoption thesis (which you couldn't verify) and deferred. The brief and PRD are finalized with social login in v1 scope. You are now at the step where the v1 epics get scoped into stories — social login is one of the features to be broken out, and it carries the largest auth/infra surface in the release.",
+    trigger: "ok, let's scope the v1 epics.",
+    expect: "Proactively resurfaces the flagged bet at this decision-relevant moment: reminds the user it was a flagged bet (their call against the rec, on an unverifiable growth thesis), connects it to the step at hand (this is where the bet turns into real auth/infra work), and offers to confirm or revisit before building on it — neutrally, as a checkpoint — then proceeds per the user's steer.",
+    mustNot: "Silently scopes the epics as if the bet were settled fact, never surfacing it though this step is where it lands; OR re-litigates the bet (re-arguing the original cut-it case as if the decision weren't already the user's to make — resurfacing is a neutral checkpoint, not a reopened argument); OR ignores the counsel note entirely." },
+
+  { id: 'bet-resurface-not-when-irrelevant', n: 15,
+    situation: "Lead on a BMAD project, mid-lifecycle. Your auto-memory counsel notes carry an OPEN BET (social login as a headline v1 feature, flagged against your scope-creep recommendation, deferred). But the current step has nothing to do with it: you are about to run domain/market research to sharpen the problem statement — social login is not part of that work.",
+    trigger: "let's get that market research going.",
+    expect: "Proceeds with the research step (e.g. delegating it the usual way) without dragging in the social-login bet — it isn't relevant to this step, so there is nothing to resurface here; the bet stays in the counsel layer for when a step actually depends on it.",
+    mustNot: "Gratuitously re-raises the social-login bet when nothing about the current step depends on it (compulsive resurfacing / nagging); treats every flagged bet as a thing to bring up each turn." },
 ]
 
 const probePrompt = (s) => [
