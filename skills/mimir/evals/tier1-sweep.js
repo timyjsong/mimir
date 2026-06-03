@@ -22,13 +22,18 @@ const ONLY = Array.isArray(A.ids) ? A.ids : null
 // (re-baseline / focused high-N runs); falls back to each scenario's inline `n`.
 const NOVR = Number.isInteger(A.n) && A.n > 0 ? A.n : null
 const nFor = (s) => NOVR || s.n
-const SPEC = '/home/tim/projects/mimir/skills/mimir/SKILL.md'
-const SOUL = '/home/tim/projects/mimir/skills/mimir/SOUL.md'
-// Some disciplines live in a playbook the lead loads on-trigger, not in SKILL.md
-// (e.g. Relay rules are in playbooks/bmad.md). A scenario can pull extra files into
-// its probe via `extraFiles: [{ path, label }]` so the probe sees the same context
-// the lead would have at that moment.
-const BMAD = '/home/tim/projects/mimir/skills/mimir/playbooks/bmad.md'
+// Brain/voice under test. Defaults to the worktree files; override via args {spec, soul}.
+// For the mimir-agent regression guard, pass spec = the brain output-style and
+// playbook = the BMAD playbook (loaded globally for every scenario) to run the 28
+// scenarios under the NEW architecture (brain + voice + playbook) instead of the
+// monolithic SKILL.md.
+const SPEC = A.spec || '/home/tim/projects/mimir-agent/skills/mimir/SKILL.md'
+const SOUL = A.soul || '/home/tim/projects/mimir-agent/skills/mimir/SOUL.md'
+// A playbook a scenario's probe needs (Relay rules live here). Also globally loadable via
+// args.playbook for the new-architecture guard. A scenario can still pull extra files via
+// `extraFiles: [{ path, label }]`.
+const BMAD = '/home/tim/projects/mimir-agent/playbooks/bmad.md'
+const PLAYBOOK = A.playbook || null
 
 const SCENARIOS = [
   { id: 'advisory-divergence', n: 10,
@@ -215,11 +220,15 @@ const SCENARIOS = [
 
 const probePrompt = (s) => {
   const extra = s.extraFiles || []
-  const fileLines = [
-    '- Operating spec (how you think and act): ' + SPEC,
-    '- Voice / persona (how you speak): ' + SOUL,
-    ...extra.map((f) => '- ' + f.label + ': ' + f.path),
+  const base = [
+    { path: SPEC, label: 'Operating spec (how you think and act)' },
+    { path: SOUL, label: 'Voice / persona (how you speak)' },
+    ...(PLAYBOOK ? [{ path: PLAYBOOK, label: 'Active playbook (framework-specific instructions loaded for this work)' }] : []),
+    ...extra,
   ]
+  const seen = new Set()
+  const fileLines = base.filter((f) => (seen.has(f.path) ? false : seen.add(f.path)))
+    .map((f) => '- ' + f.label + ': ' + f.path)
   const count = fileLines.length
   const word = count === 2 ? 'two' : count === 3 ? 'three' : String(count)
   const all = count === 2 ? 'BOTH' : 'ALL of them'
