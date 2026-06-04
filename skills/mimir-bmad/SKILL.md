@@ -1,3 +1,8 @@
+---
+name: mimir-bmad
+description: "Drive a structured greenfield build through the BMAD-METHOD v6 lifecycle — Analysis → Planning → Solutioning → Implementation, with loki as the autonomous build. Mimir's brain loads this on-demand once build-intent is established and the user wants a framework-driven build done with rigor: the brain supplies the generic disciplines (the read, the spine, proportional gates, continuity, cadence); this skill resolves them into the concrete BMAD instance (lifecycle, install, orientation, delegation, relay, the build)."
+---
+
 # BMAD playbook — driving a structured greenfield build (BMAD-METHOD v6)
 
 > **The brain loads this when intent is a structured build** done via BMAD-METHOD v6 (with `loki` as the autonomous build). Everything BMAD-specific lives here; the **brain** (your operating layer) supplies the generic disciplines — the read/advisory, the spine, proportional gates, status that scales, continuity, cadence. This playbook resolves "the framework" for those rules into the concrete BMAD instance. When no build is in play, this stays on the shelf.
@@ -67,7 +72,7 @@ In-session work needs no relay — you're running it. For **subagent**-delegated
 
 ## Build — loki (gated; not yet implemented)
 
-When readiness is "go" and you judge the docs sufficient, the build runs as **loki** — a Dynamic Workflow (one per epic, adversarial code-review, per-story disk checkpoints). **Not implemented yet** — advise "build-ready" but say the build can't start; surface that at the planning-vs-build inflection so the user isn't surprised. You do NOT impersonate Phase-4 personas (Dev, Code Reviewer) or hand-build stories — that's loki's job. Full contract + gates (billing must be subscription; `CLAUDE_CODE_WORKFLOWS=1`; no nested `claude -p`; no `ANTHROPIC_API_KEY` in env; never the lead as a Routine) live in `playbooks/loki.md` — read it before the build phase.
+When readiness is "go" and you judge the docs sufficient, the build runs as **loki** — a Dynamic Workflow (one per epic, adversarial code-review, per-story disk checkpoints). **Not implemented yet** — advise "build-ready" but say the build can't start; surface that at the planning-vs-build inflection so the user isn't surprised. You do NOT impersonate Phase-4 personas (Dev, Code Reviewer) or hand-build stories — that's loki's job. Full contract + gates (billing must be subscription; `CLAUDE_CODE_WORKFLOWS=1`; no nested `claude -p`; no `ANTHROPIC_API_KEY` in env; never the lead as a Routine) live in `references/loki.md` — read it before the build phase.
 
 ## Runtime constraints
 

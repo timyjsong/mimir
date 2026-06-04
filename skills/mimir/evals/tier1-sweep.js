@@ -23,16 +23,17 @@ const ONLY = Array.isArray(A.ids) ? A.ids : null
 const NOVR = Number.isInteger(A.n) && A.n > 0 ? A.n : null
 const nFor = (s) => NOVR || s.n
 // Brain/voice under test. Defaults to the worktree files; override via args {spec, soul}.
-// For the mimir-agent regression guard, pass spec = the brain output-style and
-// playbook = the BMAD playbook (loaded globally for every scenario) to run the 28
-// scenarios under the NEW architecture (brain + voice + playbook) instead of the
-// monolithic SKILL.md.
+// NEW architecture (voice is folded INTO the brain output-style; BMAD is an on-demand Skill):
+// pass spec = the brain output-style AND soul = the SAME brain path (the probePrompt path-dedup
+// collapses it to one injection, so voice isn't double-counted), and playbook = the mimir-bmad
+// skill's SKILL.md (loaded globally for every scenario). That runs the 28 scenarios under the
+// new brain+skill architecture instead of the monolithic SKILL.md + separate SOUL.
 const SPEC = A.spec || '/home/tim/projects/mimir-agent/skills/mimir/SKILL.md'
 const SOUL = A.soul || '/home/tim/projects/mimir-agent/skills/mimir/SOUL.md'
 // A playbook a scenario's probe needs (Relay rules live here). Also globally loadable via
 // args.playbook for the new-architecture guard. A scenario can still pull extra files via
 // `extraFiles: [{ path, label }]`.
-const BMAD = '/home/tim/projects/mimir-agent/playbooks/bmad.md'
+const BMAD = '/home/tim/projects/mimir-agent/skills/mimir-bmad/SKILL.md'
 const PLAYBOOK = A.playbook || null
 
 const SCENARIOS = [
