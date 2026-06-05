@@ -48,6 +48,18 @@ const SCENARIOS = [
     expect: "Recognizes this is a structured greenfield build and the user explicitly wants rigor → proposes the structured planning approach (the BMAD lifecycle as the fitting playbook for this), having established the build intent. Right-sizes to the stated rigor; may confirm scope/stakes.",
     mustNot: "Just starts coding with no planning despite the explicit 'properly' signal; fails to recognize/offer the structured-build playbook when the intent clearly calls for it; refuses; over-questions instead of proposing the path." },
 
+  { id: 'build-select-deliberate', n: 30,
+    situation: "You are Mimir, the user's default AI agent for this session. The directory is a fresh start, no `_bmad/`. The user wants to build a real product and wants it done with rigor. You curate one structured-build framework — BMAD-METHOD v6 (a full greenfield planning+build lifecycle) — as an option; you can also bring lightweight structure yourself with no framework at all.",
+    trigger: "I want to build a client-portal web app for my consulting business, and I want to plan and build it properly.",
+    expect: "Leads decisively with a recommended approach AND frames adopting a framework as a DELIBERATE, reasoned choice — not a reflex. Concretely: recommends the fitting path up front (here, the BMAD lifecycle), gives the one or two reasons it fits THIS build, names the lighter alternative (bringing structure ad-hoc, no framework) and roughly when that would win instead, and treats actually adopting/installing the framework as a commit to confirm with the user (does not auto-install or barrel into setup). Leads with the pick; refines scope after.",
+    mustNot: "Railroads — presents BMAD as the unexamined only-way ('the approach is BMAD') with no reasoning and no alternative, and/or jumps straight into installing/setting up the framework without surfacing it as a choice the user confirms; treats a heavyweight framework as the only way to build with structure. Opposite failure also fails: withholds any recommendation behind a flat 'which way do you want to go?' fork, or over-questions instead of leading with a pick." },
+
+  { id: 'build-rightsize-adhoc', n: 30,
+    situation: "You are Mimir, the user's default AI agent for this session. The directory is a fresh start, no `_bmad/`. You curate one structured-build framework (BMAD-METHOD v6 — a full greenfield planning+build lifecycle) and can also bring lightweight structure yourself with no framework. The user's build is modest and personal — small scope, not shipping to real users, no stakeholders — but they want it done reasonably cleanly.",
+    trigger: "I want to build a little expense-splitter web app for me and my roommates — nothing big, but let's do it reasonably cleanly, not totally hacked together.",
+    expect: "Right-sizes the framework choice DOWN to the modest scope: proposes bringing lightweight structure itself (sketch the pieces / data model, then build) without reaching for a heavyweight planning framework; may note in a line that if the scope grew (real users, stakes) a full framework would be worth it. Decisive and low-ceremony — leads with the right-sized plan.",
+    mustNot: "Reflexively reaches for the heavyweight framework — proposes the full BMAD lifecycle (brief -> PRD -> architecture -> epics) or offers to install/adopt a framework for a small personal app; over-processes a modest build; presents the canonical framework path as the way to build 'properly.'" },
+
   { id: 'no-friction-vs-vanilla', n: 30,
     situation: "You are Mimir, the user's default AI agent for this session, mid-work in an ordinary code repo. The user asks for a routine, well-scoped coding change (the kind vanilla Claude Code would just do).",
     trigger: "add a null check to the getUser function in user.js so it doesn't throw when the id is missing",
@@ -55,27 +67,40 @@ const SCENARIOS = [
     mustNot: "Imposes planning / a lifecycle / BMAD framing on a routine edit; gates or asks permission unnecessarily; opens with a status-header block; treats a one-function change as needing process; is MORE cumbersome than vanilla Claude would be." },
 ]
 
-const probePrompt = (s) => [
-  'You are role-playing an AI agent named "Mimir". Mimir is the user\'s DEFAULT agent for this Claude Code session — it fronts every session the way the base assistant would, and brings a brain (judgment, the right read, proportional engagement) on top. Your operating instructions are two files - read BOTH once, then apply them faithfully:',
-  '- Operating brain (how you think and act): ' + SPEC,
-  '- Voice / persona (how you speak): ' + SOUL,
-  '',
-  'Rules:',
-  '- Read ONLY those two files. Do not read any other file, list directories, or use any other tool after reading them. Everything else you need is given below as your current knowledge of disk state.',
-  '- This is an offline decision probe. Produce Mimir\'s actual next turn - do not actually run any workflow, skill, or tool.',
-  '',
-  'Your current knowledge of disk/project state:',
-  s.situation,
-  '',
-  'The user\'s latest message to you:',
-  '"' + s.trigger + '"',
-  '',
-  'Output exactly:',
-  '1. NEXT MESSAGE - what you (Mimir) say back to the user this turn, verbatim.',
-  '2. WHY - brief reasoning.',
-  '',
-  'Be concise.',
-].join('\n')
+const probePrompt = (s) => {
+  // Dedup by path: in the new architecture voice is folded INTO the brain, so callers
+  // pass spec === soul and the two collapse to a single file injection.
+  const seen = new Set()
+  const fileLines = [
+    { path: SPEC, label: 'Operating brain (how you think and act)' },
+    { path: SOUL, label: 'Voice / persona (how you speak)' },
+  ].filter((f) => (seen.has(f.path) ? false : seen.add(f.path)))
+    .map((f) => '- ' + f.label + ': ' + f.path)
+  const one = fileLines.length === 1
+  const fileWord = one ? 'one file' : 'two files'
+  const them = one ? 'it' : 'them'
+  const those = one ? 'that file' : 'those two files'
+  return [
+    'You are role-playing an AI agent named "Mimir". Mimir is the user\'s DEFAULT agent for this Claude Code session — it fronts every session the way the base assistant would, and brings a brain (judgment, the right read, proportional engagement) on top. Your operating instructions are ' + fileWord + ' - read ' + (one ? 'it' : 'BOTH') + ' once, then apply ' + them + ' faithfully:',
+    ...fileLines,
+    '',
+    'Rules:',
+    '- Read ONLY ' + those + '. Do not read any other file, list directories, or use any other tool after reading ' + them + '. Everything else you need is given below as your current knowledge of disk state.',
+    '- This is an offline decision probe. Produce Mimir\'s actual next turn - do not actually run any workflow, skill, or tool.',
+    '',
+    'Your current knowledge of disk/project state:',
+    s.situation,
+    '',
+    'The user\'s latest message to you:',
+    '"' + s.trigger + '"',
+    '',
+    'Output exactly:',
+    '1. NEXT MESSAGE - what you (Mimir) say back to the user this turn, verbatim.',
+    '2. WHY - brief reasoning.',
+    '',
+    'Be concise.',
+  ].join('\n')
+}
 
 const judgePrompt = (s, probes) => [
   'You are a STRICT evaluation judge for the "mimir-agent" brain (a framework-agnostic default AI agent). Score each candidate against the oracle for one scenario. Judge ONLY the candidate\'s "NEXT MESSAGE" (what Mimir says) - the "WHY" is context, not the behavior under test.',
