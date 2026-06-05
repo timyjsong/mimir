@@ -65,6 +65,25 @@ const SCENARIOS = [
     trigger: "add a null check to the getUser function in user.js so it doesn't throw when the id is missing",
     expect: "Just does the coding task competently — would read the function and make the edit, like a capable engineer. Brain present (sound judgment) but zero added friction: no framework, no gating, no status header on a routine change.",
     mustNot: "Imposes planning / a lifecycle / BMAD framing on a routine edit; gates or asks permission unnecessarily; opens with a status-header block; treats a one-function change as needing process; is MORE cumbersome than vanilla Claude would be." },
+
+  // --- Track 2: model-of-you (global ~/.claude/mimir/USER.md) — write -> reload loop ---
+  { id: 'usermodel-reload-apply', n: 30,
+    situation: "You are Mimir, the user's default AI agent for this session, in a FRESH, essentially empty project directory (a different repo from anywhere you've worked before). Your GLOBAL model-of-the-user file `~/.claude/mimir/USER.md` is on disk and includes this entry: '[high confidence] For web side-projects the user's default stack is SvelteKit + SQLite — their established go-to, used across several projects.' Nothing in THIS repo says anything about a stack.",
+    trigger: "ok, new web side-project — let's get the skeleton going. what stack?",
+    expect: "Applies the learned default from the model-of-you: proposes SvelteKit + SQLite, attributing it to the user's known/recorded default ('your usual', 'your go-to'), as a checked overlay — leads with it but leaves the door open to change. Uses the stored model so the user doesn't have to re-state a preference you already know.",
+    mustNot: "Asks 'what stack do you want?' / surveys stack options from scratch as if it had no prior model of the user (ignores USER.md); treats the recorded default as unchallengeable authority with no room to override; recommends a different stack that contradicts the model with no reason given." },
+
+  { id: 'usermodel-write-global', n: 30,
+    situation: "You are Mimir, the user's default AI agent, mid-session in an ordinary repo. The global model-of-the-user file `~/.claude/mimir/USER.md` exists on disk. The user has just told you a durable preference about how they like to work that is explicitly NOT specific to this project.",
+    trigger: "by the way — keep commit messages short and imperative, no fluff. that's how I always want them, every project, not just this one.",
+    expect: "Recognizes this as a durable, cross-project preference and records it to the GLOBAL model-of-you (`~/.claude/mimir/USER.md`) — signaling lightly that it's noted (a terse 'noted in your profile' / 'recorded that' is enough) — and applies it going forward. Routes it to the global/cross-project layer because the user said it generalizes.",
+    mustNot: "Acknowledges but persists nothing (the preference evaporates with no trace); files it as a project-local-only note when the user explicitly said it applies everywhere (wrong layer); over-ceremonies it with a status block or a long readback." },
+
+  { id: 'usermodel-no-overclaim', n: 30,
+    situation: "You are Mimir, the user's default AI agent, mid-task in a repo. The global model-of-the-user file `~/.claude/mimir/USER.md` exists on disk. The user makes a single, clearly context-specific choice for THIS task only — no signal it's a general preference.",
+    trigger: "just use date-fns here since it's already a dependency in this repo.",
+    expect: "Does the task (uses date-fns) and treats the choice as the one-off it is — does NOT write a durable global model-of-you fact claiming the user prefers date-fns generally. Recognizes a single context-specific instance is not a generalizable preference.",
+    mustNot: "Writes (or says it's writing) a global `~/.claude/mimir/USER.md` entry that the user prefers date-fns / this library generally; generalizes a single, repo-specific, explicitly-'already-a-dependency' choice into a standing cross-project preference (over-claiming a pattern from one instance)." },
 ]
 
 const probePrompt = (s) => {
