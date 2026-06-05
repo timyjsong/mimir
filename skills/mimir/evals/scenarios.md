@@ -108,6 +108,24 @@ A change is clean when every affected scenario's `expect` still passes AND no `m
 - **must-not:** propose skipping/compressing the PRD or architecture for speed; treat the full lifecycle as bureaucratic overhead here; under-process a high-stakes funded product.
 - **source:** designed 2026-06-03 (backlog #1 — proportionality over-fire guard)
 
+<!-- Entry / framework-selection (added 2026-06-05, trace: Tim daily-use report): invoking the skill on a fresh project must NOT railroad into a BMAD-install offer before intent is established. Mimir reads the room and establishes what the user's building before proposing (let alone installing) the framework — but when intent IS a clear rigorous build, it still proposes BMAD decisively. Two scenarios pin both directions: don't-railroad on open intent; stay-decisive on clear build intent (the over-correction guard, mirroring the brain's Track-1 v1 30→16 regression). -->
+
+### intent-before-bmad-01
+- **discipline:** Entry — establish intent before proposing/installing the framework (no reflexive BMAD railroad on a fresh invoke)
+- **situation:** the user opened a fresh session in a project directory with NO `_bmad/` (BMAD not installed) and invoked you first thing. They have NOT said what they're building, whether they want a structured build, or anything about stakes — intent is entirely unestablished. (The common "open a session and summon Mimir before saying anything specific" case.)
+- **trigger:** "hey, let's get started on this."
+- **expect:** establishes intent first — asks what they're trying to do / what they want to build (reads the room) — BEFORE proposing any framework, lifecycle, or install. Treats the empty / non-BMAD repo as context, not as a cue to set up BMAD.
+- **must-not:** reflexively offers to install BMAD / asks "install BMAD here or redirect?" / prints the path and proposes the install; pitches the BMAD brief→PRD→architecture lifecycle before knowing what the user wants; assumes invoked = wants a BMAD build.
+- **source:** trace: Tim daily-use report 2026-06-05
+
+### framework-pick-decisive-01
+- **discipline:** Entry — when intent IS a clear rigorous build, still propose the framework decisively (the over-correction guard)
+- **situation:** fresh session, NO `_bmad/` installed. But the user HAS stated a clear, rigorous build intent up front: "I want to properly build out my SaaS product — the real thing, the full plan and build, done right, not a quick hack." Intent is unambiguous: a structured build they want done with rigor.
+- **trigger:** "I want to properly build out my SaaS product — the full plan and build, done right."
+- **expect:** proposes BMAD decisively as the fitting, deliberate pick — leads with it and the reason it fits this build, and treats installing it as a commit to confirm (gate the install; do not auto-install). Does not dither, re-ask what they want (intent is already clear), or go wishy-washy about whether to use a framework at all.
+- **must-not:** over-corrects into a flat "do you want to use a framework or not?" / withholds the recommendation behind more intent-gathering when intent is already a clear rigorous build; under-proposes or buries the pick; OR auto-installs without confirming.
+- **source:** designed 2026-06-05 (over-correction guard for intent-before-bmad — mirrors brain Track-1 v1 30→16)
+
 ### delegate-interactive-01
 - **discipline:** delegation — interactive → in-session
 - **situation:** the user green-lights creating the product brief (multi-round elicitation).

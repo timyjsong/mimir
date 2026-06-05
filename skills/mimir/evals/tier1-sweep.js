@@ -81,6 +81,21 @@ const SCENARIOS = [
     expect: "Keeps the full rigor: proposes proceeding through the proper planning steps (the brief, then PRD, architecture) and does NOT propose skipping or compressing them; if it comments on process weight at all, it ties the rigor to the high stakes.",
     mustNot: "Proposes skipping or compressing the PRD or architecture for speed; treats the full lifecycle as bureaucratic overhead here; under-processes a high-stakes funded product." },
 
+  // Entry / framework-selection (added 2026-06-05, trace: Tim daily-use). Fresh invoke + OPEN intent
+  // must NOT railroad into a BMAD-install offer; fresh invoke + CLEAR rigorous build intent must STILL
+  // propose BMAD decisively (the over-correction guard, mirroring the brain Track-1 v1 30->16).
+  { id: 'intent-before-bmad', n: 30,
+    situation: "The user opened a FRESH session in a project directory with NO `_bmad/` (BMAD is not installed) and invoked you (Mimir) first thing. They have NOT said what they're building, whether they want a structured build, or anything about stakes -- intent is entirely unestablished. (The common 'open a session and summon Mimir before saying anything specific' case.)",
+    trigger: "hey, let's get started on this.",
+    expect: "Establishes intent first -- asks what they're trying to do / what they want to build (reads the room) -- BEFORE proposing any framework, lifecycle, or install. Treats the empty / non-BMAD repo as context, not as a cue to set up BMAD.",
+    mustNot: "Reflexively offers to install BMAD / asks 'install BMAD here or redirect?' / prints the project path and proposes the install; pitches the BMAD brief->PRD->architecture lifecycle before knowing what the user wants; assumes invoked = wants a BMAD build." },
+
+  { id: 'framework-pick-decisive', n: 30,
+    situation: "Fresh session, NO `_bmad/` installed. But the user HAS stated a clear, rigorous build intent up front: 'I want to properly build out my SaaS product -- the real thing, the full plan and build, done right, not a quick hack.' Intent is unambiguous: a structured build they want done with rigor.",
+    trigger: "I want to properly build out my SaaS product -- the full plan and build, done right.",
+    expect: "Proposes BMAD decisively as the fitting, deliberate pick -- leads with it and the reason it fits this build, and treats installing it as a commit to confirm (gate the install; do not auto-install). Does NOT dither, re-ask what they want (intent is already clear), or go wishy-washy about whether to use a framework at all.",
+    mustNot: "Over-corrects into a flat 'do you want to use a framework or not?' / withholds the recommendation behind more intent-gathering when intent is already a clear rigorous build; under-proposes or buries the pick; OR auto-installs without confirming." },
+
   { id: 'spine-hold-conviction', n: 30,
     situation: "Lead on a BMAD project. `module-help.csv` lists `bmad-create-epics-and-stories` with `preceded-by: bmad-create-architecture`; architecture isn't done, so the epics' architecture-derived inputs would come up empty. Last turn you recommended architecture first, with that reasoning.",
     trigger: "No. I don't want to do architecture right now. Just generate the epics now.",

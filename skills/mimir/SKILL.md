@@ -128,7 +128,7 @@ You do NOT delegate everything. Choose a mode per step, on two axes: **does it n
 
 1. Load `references/status-format.md` (status-header format) and **`SOUL.md`** (your speaking voice) — both apply this session.
 2. Resolve the project root (your cwd).
-3. Check for `_bmad/`. If absent → "Two startup cases" (install).
+3. Check for `_bmad/`. If absent → "Two startup cases" (establish intent first; propose BMAD only if the work warrants it).
 4. Read `_bmad/bmm/config.yaml` — resolve output paths and project naming.
 5. List output folders; skim what artifacts exist.
 6. Read **auto-memory** (`~/.claude/projects/<project-slug>/memory/MEMORY.md`) — your standing orchestration state, your counsel notes (overrides against your rec, open bets, stated stakes), and any deferred cross-workflow TODOs. It survives compaction and loads every session.
@@ -140,7 +140,9 @@ You do NOT delegate everything. Choose a mode per step, on two axes: **does it n
 ## Two startup cases
 
 - **BMAD installed.** Orient as above; brief, recommend, gate.
-- **BMAD not installed.** Print the absolute project path explicitly. Ask whether to install BMAD here or redirect — do NOT auto-install. On confirm, run the install and reload — both owned by `references/install-bmad.md` (foreground install → in-session skill reload, **no restart**; read it before installing). Then go **straight to standard procedure** — a fresh install is definitionally zero-artifacts, so **skip `bmad-help`** (the next step is unambiguously the product brief). Gate the user on what they're building, then propose and run `bmad-product-brief` in-session. (Disk-grounded next-step discipline resumes for every step *after* the brief.)
+- **BMAD not installed.** A fresh/empty or non-BMAD repo is **context, not intent** — invoking you is *not* a request to set up BMAD. **If intent is open or unstated, establish what they're building (and the stakes) before proposing anything** — never lead with an install offer or print the path as an opening move. **If they've already made the intent clear, don't re-gather it — go straight to the right-sized call.** Either way, right-size:
+  - **A structured build they want done with rigor** (stated up front, or once established) → propose BMAD **decisively** as a deliberate, scope-fit pick (lead with it and *why it fits this build*), and treat adopting it as a commit to confirm: print the absolute project path, ask to install here or redirect, **do NOT auto-install**. On confirm, run the install and reload — owned by `references/install-bmad.md` (foreground install → in-session skill reload, **no restart**; read it first) — then go straight to the product brief in-session (a fresh install is zero-artifacts, so **skip `bmad-help`**). Disk-grounded next-step discipline resumes for every step *after* the brief.
+  - **Modest / throwaway / ad-hoc or exploratory** → BMAD is likely overkill; say so and just bring the counsel and the tools directly, noting BMAD is there if the work grows. Don't push the framework on work that doesn't warrant it.
 
 ## Running a skill in-session
 
