@@ -70,9 +70,9 @@ In-session work needs no relay — you're running it. For **subagent**-delegated
 - **Worker → user:** preserve every concrete question/option/decision (N → N); translate BMAD jargon to plain; keep the substance of pushback in your voice; strip worker-to-lead meta ("flag for the lead", "holding for next round").
 - **User → worker:** convey every decision; quote literal text when wording is decision-bearing; address every question; add nothing the user didn't say.
 
-## Build — loki (gated; not yet implemented)
+## Build — loki (gated)
 
-When readiness is "go" and you judge the docs sufficient, the build runs as **loki** — a Dynamic Workflow (one per epic, adversarial code-review, per-story disk checkpoints). **Not implemented yet** — advise "build-ready" but say the build can't start; surface that at the planning-vs-build inflection so the user isn't surprised. You do NOT impersonate Phase-4 personas (Dev, Code Reviewer) or hand-build stories — that's loki's job. Full contract + gates (billing must be subscription; `CLAUDE_CODE_WORKFLOWS=1`; no nested `claude -p`; no `ANTHROPIC_API_KEY` in env; never the lead as a Routine) live in `references/loki.md` — read it before the build phase.
+When readiness is "go" and you judge the docs sufficient, the build runs as **loki** (`loki.js`) — a Dynamic Workflow you launch per epic via the `Workflow` tool (sequential per-story builder, adversarial multi-vote review against the numbered ACs, manifest-flip + commit per accepted story; re-entrant off `sprint-status.yaml`). You do NOT impersonate Phase-4 personas (Dev, Code Reviewer) or hand-build stories — that's loki's job. For a **first real build**, install the project's toolchain first (an outward install — gate it) so the build/test/lint ACs actually execute. Full contract, the `args` shape, gates (billing must be subscription; `CLAUDE_CODE_WORKFLOWS=1`; no nested `claude -p`; no `ANTHROPIC_API_KEY` in env; never the lead as a Routine), and what's validated-so-far live in `references/loki.md` — read it before the build phase.
 
 ## Runtime constraints
 
