@@ -4,7 +4,7 @@ Read this before the build phase. **Huldra is a Dynamic Workflow, not a subagent
 
 ## Status
 
-**Implemented + validated on a real epic.** Huldra ships as `skills/mimir-bmad/huldra.js`; the mechanism is validated end-to-end (planner → builder → adversarial review → manifest-flip → commit → re-entrancy), including a full **real-toolchain epic** — see "What's validated", ROUND 2. Still unexercised: the **reject → retry → stop-epic** path and the **reproduced-failure hard block** (both written, not yet triggered in a live run).
+**Implemented + validated on a full real product.** Huldra ships as `skills/mimir-bmad/huldra.js`; every mechanism is validated on real builds (planner → builder → adversarial review → manifest-flip → commit → re-entrancy → retry → stop-epic) across a 37-story greenfield app — see "What's validated", ROUNDS 1–3. The one path not yet triggered in vivo: the **reproduced-failure hard block** (validated instead by deterministic logic tests 10/10 + a 20-reviewer behavioral eval: 0/10 false positives on a healthy tree, 9/10 detection on a flake-restored tree).
 
 ## Shape
 
@@ -47,7 +47,15 @@ Read this before the build phase. **Huldra is a Dynamic Workflow, not a subagent
 
 - ✅ real verification end-to-end per story — deps installed, lint/tsc/tests executed, `bun build --compile` binary (~92 MB) built and BOOTED with routes exercised, clean teardown (port freed every story); ✅ multi-story **sequencing** — each story built on the prior tree (119 tests by 1-5); ✅ all 4 stories accepted attempt-1 (1-2 unanimous, 1-3 split 2-1) with per-story manifest flips + commits; cost ≈ 1.34M tokens / 22 agents / ~52 min.
 - **Finding → the two patterns above:** 1-3's dissenting reviewer REPRODUCED a timestamp-racy test (~40% flake) and was outvoted 2-1 — the flake entered the tree and taxed 1-5's builder (re-triaged it as pre-existing). Pulled in one prevention + one detection change: the builder prompt requires **deterministic tests** (no wall-clock fixtures; freeze/inject the clock), and a **reviewer-reproduced failing run is a hard block** that overrides the vote and feeds the retry. (The flaky test itself was fixed post-run — frozen clock, 20/20.)
-- **Not yet exercised:** the **reject → retry → stop-epic** path (every story so far accepted on attempt 1) and the new **hard block** (a deliberate fault-injection round would exercise both).
+**ROUND 3 (full product build — epics 2–6 + fault-injection, 2026-06-06)** — same tree continued to a finished product (33 more stories, real toolchain):
+
+- ✅ **Epics 2–6 built + accepted** (37/38 stories `done`; 1-1 = the user-creds-gated spike, by design). Final: 620-pass/18-skip suite, 5 per-platform binaries, reproducible release zips + recipient README, 416-line manual e2e checklist. ≈17M subagent tokens total across the campaign.
+- ✅ **Retry ×4, natural** (2-4, 4-8, 5-4, 6-2 — all recovered on attempt 2); **split-vote majority ×2** (1-3, 4-5 — carried correctly, no spurious hard-blocks).
+- ✅ **Spec-gated STOPs handled compliantly**: 2-4/2-5 hit their stories' own branch gates (missing 1-1 spike result) — first attempt stopped *silently* → rejected; retry recorded the STOP per protocol → accepted. The framework's escalate-don't-guess discipline held.
+- ✅ **Mid-epic workflow death recovered by re-entrancy**: a transient platform model outage killed a builder mid-story (agent ended without StructuredOutput → workflow crashed). Recovery = reset tree to last accepted commit, relaunch same args; planner skipped `done` stories, zero work lost. Re-entrancy is now an in-vivo verified property.
+- ✅ **STOP-EPIC exercised** (fault-injection: an impossible 10 MB binary ceiling on 6-1): reject → retry where the builder *proved* unsatisfiability (compiled a bare hello-world = 60.5 MB toolchain floor), refused to fudge sizes / waive / edit the AC → reject again → `stopped: true`, no manifest flip. The machinery escalates to the human rather than gaming the spec — both builder and reviewers even identified the injected commit and still held the line.
+- **Earned pattern #3 (lead-gate find):** 12 tsc errors shipped across 4 wizard test files — builders ran src-scoped typechecks and reviewers trusted the recorded evidence. Both prompts updated: the builder must run the FULL repo gate (tsc over src AND tests); reviewers run `bunx tsc --noEmit` themselves, never trusting recorded scope. (Caught by the lead's independent between-epic gate; repaired in-tree.)
+- **Not yet exercised in vivo:** only the **reproduced-failure hard block** (a real flaky test surviving a builder into review). Its detection layer is eval-validated at N=20 and its aggregation logic-tested; first natural flake will exercise the joint.
 
 ## Monitoring
 
