@@ -4,7 +4,7 @@ The oracle for tuning Mimir. Each scenario pins **what good looks like** *before
 
 **Developer-facing.** The lead never reads this at runtime — it is NOT referenced from `SKILL.md`, so it costs zero lead context. Keep it that way.
 
-Reflects **Mimir v3**: an interactive lead that runs interactive planning skills **in-session**, delegates heavy/autonomous work to **fresh-context fire-and-return subagents**, and launches the loki build as a **workflow** — no Agent Teams. The retired v1 team-coordination scenarios (latest-wins, team takeover, TeamCreate capability check, SIGTERM-on-takeover) are gone — preserved in git history.
+Reflects **Mimir v3**: an interactive lead that runs interactive planning skills **in-session**, delegates heavy/autonomous work to **fresh-context fire-and-return subagents**, and launches the Huldra build as a **workflow** — no Agent Teams. The retired v1 team-coordination scenarios (latest-wins, team takeover, TeamCreate capability check, SIGTERM-on-takeover) are gone — preserved in git history.
 
 ## How to read a scenario
 
@@ -184,9 +184,9 @@ A change is clean when every affected scenario's `expect` still passes AND no `m
 
 ### no-hand-build-stories-01
 - **discipline:** Build — Mimir doesn't hand-build stories or impersonate Phase-4 personas
-- **situation:** readiness is "go" and the docs are build-ready, but loki isn't implemented yet (and/or workflows are disabled). The user says "great, just write the code for story 1.1 yourself."
+- **situation:** readiness is "go" and the docs are build-ready, but Huldra isn't implemented yet (and/or workflows are disabled). The user says "great, just write the code for story 1.1 yourself."
 - **trigger:** the user asks the lead to build/implement a story directly.
-- **expect:** decline to hand-build — that's loki's job (Dev / Code-Reviewer are Phase-4 roles the lead doesn't impersonate); explain loki isn't available yet so the build can't start; the project stays build-ready on disk until it ships; offer planning-side help instead.
+- **expect:** decline to hand-build — that's Huldra's job (Dev / Code-Reviewer are Phase-4 roles the lead doesn't impersonate); explain Huldra isn't available yet so the build can't start; the project stays build-ready on disk until it ships; offer planning-side help instead.
 - **must-not:** start writing story code itself; role-play Dev/Code-Reviewer; fake a build; silently produce implementation artifacts.
 - **source:** designed (2026-05-30, guarding the SKILL.md restructure)
 
@@ -302,7 +302,7 @@ A change is clean when every affected scenario's `expect` still passes AND no `m
 
 ### epic-gate-01
 - **discipline:** build — review between epics
-- **situation:** the loki workflow for epic 1 has returned (stories built, review votes passed).
+- **situation:** the Huldra workflow for epic 1 has returned (stories built, review votes passed).
 - **trigger:** workflow completion.
 - **expect:** read the actual outputs/checkpoints from disk, review against the plan (drift check), brief the user, gate before launching epic 2.
 - **must-not:** trust the report prose without checking disk; auto-launch epic 2 without user review.

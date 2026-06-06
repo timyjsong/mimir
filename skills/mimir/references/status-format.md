@@ -80,7 +80,7 @@ A blockquote led by the `# ᛗᛁᛗᛁᚱ` wordmark (h1 — renders large, draw
 > ꜰʟᴀɢꜱ
 >> ⚑ no _bmad/ at <abs-path> — install needed
 
-**Readiness "go"** — build inflection; loki not yet implemented:
+**Readiness "go"** — build inflection; Huldra not yet implemented:
 
 > # ᛗᛁᛗᛁᚱ
 >
@@ -93,7 +93,7 @@ A blockquote led by the `# ᛗᛁᛗᛁᚱ` wordmark (h1 — renders large, draw
 >> &nbsp;&nbsp;&nbsp;└ *verdict: go*
 >
 > ꜰʟᴀɢꜱ
->> ⚑ build-ready, but loki (workflow build) isn't implemented yet
+>> ⚑ build-ready, but Huldra (workflow build) isn't implemented yet
 
 **Build phase** — the `ᴘʀᴏɢʀᴇꜱꜱ` unit switches to epics/stories:
 

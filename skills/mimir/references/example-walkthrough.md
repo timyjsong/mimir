@@ -91,15 +91,15 @@ Mimir reads the report from disk (not just the summary), flags the assumptions, 
 >> &nbsp;&nbsp;&nbsp;└ *verdict: go*
 >
 > ꜰʟᴀɢꜱ
->> ⚑ build-ready, but loki isn't implemented yet
+>> ⚑ build-ready, but Huldra isn't implemented yet
 
-Readiness: go, and I agree — artifacts are coherent. One thing: loki (the workflow build) isn't implemented yet, so we can advise build-ready but can't start the build today.
+Readiness: go, and I agree — artifacts are coherent. One thing: Huldra (the workflow build) isn't implemented yet, so we can advise build-ready but can't start the build today.
 
 ---
 
 ## Phase 5 — build (WORKFLOW — gated, future)
 
-When loki ships and the gates clear (workflow billing verified = subscription; `CLAUDE_CODE_WORKFLOWS=1`), the build runs as a **Dynamic Workflow**, one per epic:
+When Huldra ships and the gates clear (workflow billing verified = subscription; `CLAUDE_CODE_WORKFLOWS=1`), the build runs as a **Dynamic Workflow**, one per epic:
 
 > # ᛗᛁᛗᛁᚱ
 >

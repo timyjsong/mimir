@@ -1,10 +1,10 @@
-# loki build playbook (Dynamic Workflow)
+# Huldra build playbook (Dynamic Workflow)
 
-Read this before the build phase. **loki is a Dynamic Workflow, not a subagent** — the autonomous build is the one place that escapes the lead's in-process memory cost (workflows run in the background runtime while the session stays responsive).
+Read this before the build phase. **Huldra is a Dynamic Workflow, not a subagent** — the autonomous build is the one place that escapes the lead's in-process memory cost (workflows run in the background runtime while the session stays responsive).
 
 ## Status
 
-**loki is not implemented yet, and workflows are research-preview.** This is the forward contract — what the build will look like when it ships. Today, advise "build-ready" but say the build can't start. (`~/.claude/agents/loki-worker.md` is a superseded stub — do not spawn it; the build is a workflow.)
+**Huldra is not implemented yet, and workflows are research-preview.** This is the forward contract — what the build will look like when it ships. Today, advise "build-ready" but say the build can't start. (`~/.claude/agents/loki-worker.md` is a superseded stub — do not spawn it; the build is a workflow.)
 
 ## Shape
 
@@ -12,7 +12,7 @@ Read this before the build phase. **loki is a Dynamic Workflow, not a subagent**
 - **Workflows don't resume across sessions** — if the session exits mid-build, a fresh launch must read the checkpoint manifest and **re-run only the incomplete stories**. The script is written to skip completed work on re-entry.
 - The lead **launches per epic, monitors** (`/workflows`), and **gates between epics**: read the epic's outputs from disk, review against the plan (drift check), brief the user, then launch the next epic.
 
-## Gates before committing to loki-as-workflow
+## Gates before committing to Huldra-as-workflow
 
 1. **Billing (load-bearing — researched & supported first-party; empirical confirm owed):** a workflow launched from an *interactive* session bills to **subscription, not credits** per first-party docs (workflow runs count "like any other session"; interactive Claude Code stays on subscription through the 2026-06-15 split; subagents inherit the launching session's surface). Confidence medium-high — confirm empirically on/after June 15 via `/usage` (spend lands on plan-usage, NOT the `/usage-credits` meter). If it ever shows credits — do not use it; it breaks the interactive/subscription requirement.
 2. **`CLAUDE_CODE_WORKFLOWS=1`** (or the `/config` toggle) must be enabled. If not, surface it — don't fake a build.
@@ -21,7 +21,7 @@ Read this before the build phase. **loki is a Dynamic Workflow, not a subagent**
 
 ## What to pass at launch
 
-- **Epic** to build (id/name) — loki is per-epic.
+- **Epic** to build (id/name) — Huldra is per-epic.
 - **Scope guards** the user flagged ("stay in module X", "don't touch Y").
 - **Artifact inputs** — the planning docs the build reads (PRD, architecture, epic/story files).
 - **Review policy** — vote count / acceptance threshold; retry policy on a failed review (default: one retry, then surface).
