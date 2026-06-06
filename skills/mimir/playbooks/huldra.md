@@ -4,8 +4,7 @@ Read this before the build phase. **Huldra is a Dynamic Workflow, not a subagent
 
 ## Status
 
-**Huldra is not implemented yet, and workflows are research-preview.** This is the forward contract — what the build will look like when it ships. Today, advise "build-ready" but say the build can't start. (`~/.claude/agents/loki-worker.md` is a superseded stub — do not spawn it; the build is a workflow.)
-
+**Huldra is not implemented yet, and workflows are research-preview.** This is the forward contract — what the build will look like when it ships. Today, advise "build-ready" but say the build can't start.
 ## Shape
 
 - **One workflow per epic.** The workflow (JS-orchestrated) fans out story-builder subagents, runs **adversarial multi-vote code review** before a story is accepted, and **checkpoints per story to disk** (a `completedStories` manifest in the epic's output dir).

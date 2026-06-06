@@ -82,8 +82,6 @@ Mimir picks one of three modes per step, on two axes — *needs live back-and-fo
 | `evals/scenarios.md`, `evals/CHANGE-PROTOCOL.md`, `evals/tier1-sweep.js` | maintainer | tuning | Eval oracle + change discipline + the Tier-1 sweep harness (dev-only; never runtime) |
 | `references/example-walkthrough.md` | maintainer | on demand | Illustrative v3 end-to-end trace (not runtime) |
 | `~/.claude/agents/bmad-worker.md` | the subagent | at spawn | Fire-and-return autonomous worker |
-| `~/.claude/agents/loki-worker.md` | — | — | Superseded stub (Huldra is a workflow) |
-
 ## Core design decisions (and why)
 
 - **Three modes, by interactivity × context weight.** Interactive elicitation → in-session (the lead runs the skill). Heavy/autonomous → fire-and-return subagent. Autonomous build → workflow. Replaces v1's "delegate everything to teams."
@@ -109,7 +107,7 @@ Mimir picks one of three modes per step, on two axes — *needs live back-and-fo
 
 - **Workflow billing (load-bearing) — researched & SUPPORTED first-party, medium-high; empirical confirm still owed post-June-15.** Question: does a workflow launched from an interactive session bill to subscription or credits? First-party docs (2026-06-03 research): the **June-15-2026 split is by *named programmatic surfaces*** → the Agent SDK credit pool (`claude -p` non-interactive, Agent SDK in your own projects, GitHub Actions, third-party SDK apps); **interactive Claude Code stays on subscription "unchanged"** ([support.claude.com/articles/15036540](https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan), [headless.md](https://code.claude.com/docs/en/headless.md)). The Workflows doc (Cost) says workflow runs "count toward your plan's usage and rate limits **like any other session**," in a *local* background runtime (not a cloud Routine) ([workflows.md](https://code.claude.com/docs/en/workflows.md)); subagents inherit the launching session's pool ([costs.md](https://code.claude.com/docs/en/costs.md)). **So Huldra launched from an interactive session → subscription, end-to-end, provided its gates hold** (interactive launch, no nested `claude -p`, never a Routine). *Not* HIGH confidence because no first-party text states a general "root surface" rule verbatim or classifies an interactive-launched workflow explicitly (it's a sound inference), and the change is post-dated so not yet observable. **Empirical confirm (post-June-15):** run a small workflow interactively, watch `/usage` lands on plan-usage, not the `/usage-credits` meter. **New footgun → add as a Huldra gate:** `ANTHROPIC_API_KEY` in env bypasses *both* subscription and credits → pay-go API regardless of surface (`playbooks/huldra.md` doesn't gate this yet).
 - **`opus[1m]` frontmatter syntax** — assumed valid; fall back to `claude-opus-4-8[1m]` or bare `opus` if a spawn errors.
-- **Huldra is not implemented.** `playbooks/huldra.md` is the forward contract; `agents/loki-worker.md` is a superseded stub.
+- **Huldra is not implemented.** `playbooks/huldra.md` is the forward contract.
 
 ## Maintenance guide
 
