@@ -97,7 +97,7 @@ on-demand references where needed.
 - **Orchestration modes** — run in-session, delegate to a fresh-context subagent, or launch
   a workflow.
 - **Framework playbooks (Skills, on-demand)** — **BMAD** is one playbook (the full
-  greenfield lifecycle + loki build), engaged only when intent is a structured build. Demoted
+  greenfield lifecycle + Huldra build), engaged only when intent is a structured build. Demoted
   from *the default* to *one option*. Future playbooks (diagnostics, brownfield audit) add
   here without touching the brain. **BMAD-as-playbook must drive the lifecycle as well as it
   does today — guarded by the 28 existing BMAD scenarios (the regression backstop).**

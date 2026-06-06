@@ -1,15 +1,15 @@
 ---
 name: mimir-bmad
-description: "Drive a structured greenfield build through the BMAD-METHOD v6 lifecycle — Analysis → Planning → Solutioning → Implementation, with loki as the autonomous build. Mimir's brain loads this on-demand once build-intent is established and the user wants a framework-driven build done with rigor: the brain supplies the generic disciplines (the read, the spine, proportional gates, continuity, cadence); this skill resolves them into the concrete BMAD instance (lifecycle, install, orientation, delegation, relay, the build)."
+description: "Drive a structured greenfield build through the BMAD-METHOD v6 lifecycle — Analysis → Planning → Solutioning → Implementation, with Huldra as the autonomous build. Mimir's brain loads this on-demand once build-intent is established and the user wants a framework-driven build done with rigor: the brain supplies the generic disciplines (the read, the spine, proportional gates, continuity, cadence); this skill resolves them into the concrete BMAD instance (lifecycle, install, orientation, delegation, relay, the build)."
 ---
 
 # BMAD playbook — driving a structured greenfield build (BMAD-METHOD v6)
 
-> **The brain loads this when intent is a structured build** done via BMAD-METHOD v6 (with `loki` as the autonomous build). Everything BMAD-specific lives here; the **brain** (your operating layer) supplies the generic disciplines — the read/advisory, the spine, proportional gates, status that scales, continuity, cadence. This playbook resolves "the framework" for those rules into the concrete BMAD instance. When no build is in play, this stays on the shelf.
+> **The brain loads this when intent is a structured build** done via BMAD-METHOD v6 (with `Huldra` as the autonomous build). Everything BMAD-specific lives here; the **brain** (your operating layer) supplies the generic disciplines — the read/advisory, the spine, proportional gates, status that scales, continuity, cadence. This playbook resolves "the framework" for those rules into the concrete BMAD instance. When no build is in play, this stays on the shelf.
 
 ## The framework & lifecycle
 
-You drive a **BMAD-METHOD v6** project across its lifecycle — Analysis → Planning → Solutioning → Implementation — and, when readiness and your own judgment agree it's build-ready, hand the build to **loki**.
+You drive a **BMAD-METHOD v6** project across its lifecycle — Analysis → Planning → Solutioning → Implementation — and, when readiness and your own judgment agree it's build-ready, hand the build to **Huldra**.
 
 - **The framework's authoritative next-step source** (what the brain's advisory rules call on): `bmad-help`, and/or the canonical sequence in `_bmad/bmm/module-help.csv` — each skill's `phase`, `preceded-by`, `required`. **Derive the next step from these on disk, never a remembered order** (e.g. architecture precedes epics within Solutioning — the classic stale-sequence trap). Right-size the sequence to the stakes (a throwaway spike doesn't warrant a full PRD + formal architecture; a funded, board-facing product does — hold the rigor).
 
@@ -19,7 +19,7 @@ Choose per step, on two axes: **does it need live back-and-forth with the user?*
 
 - **In-session (you run the skill yourself).** Interactive, conversation-driven work: ideation, analysis, the product brief, the interactive parts of PRD and architecture. Invoke the `bmad-*` skill directly (Skill tool) and run it, honoring cadence. (Verified: the lead can invoke and run BMAD skills in-session.)
 - **Subagent (delegate; fresh context; artifact returns to disk).** Heavy/autonomous work: domain/market research, document-project, readiness checks, bulky generation. Fire-and-return; you stay light and verify the artifact on disk. Ephemeral — don't keep subagents alive across steps.
-- **Workflow (autonomous fan-out).** The loki build (gated — see below).
+- **Workflow (autonomous fan-out).** The Huldra build (gated — see below).
 
 **The deterministic test (in-session vs subagent):** does the skill **halt for user input mid-run** (menus, step-by-step elicitation)? → **in-session** (a fire-and-return subagent can't answer its menus — it would hang, or answer them itself and defeat the collaboration). Does it **run autonomously to completion**? → **subagent**. BMAD's interactive skills (`bmad-product-brief`, `bmad-prd` create, `bmad-create-epics-and-stories`, `bmad-create-story`, `bmad-create-architecture`) are menu/step-driven → in-session; its autonomous ones (research, `bmad-document-project`, readiness, validation/sharding) run to completion → subagent. Interactive *and* heavy → still in-session; manage the budget, never trade the user out of the loop to save context.
 
@@ -70,9 +70,9 @@ In-session work needs no relay — you're running it. For **subagent**-delegated
 - **Worker → user:** preserve every concrete question/option/decision (N → N); translate BMAD jargon to plain; keep the substance of pushback in your voice; strip worker-to-lead meta ("flag for the lead", "holding for next round").
 - **User → worker:** convey every decision; quote literal text when wording is decision-bearing; address every question; add nothing the user didn't say.
 
-## Build — loki (gated)
+## Build — Huldra (gated)
 
-When readiness is "go" and you judge the docs sufficient, the build runs as **loki** (`loki.js`) — a Dynamic Workflow you launch per epic via the `Workflow` tool (sequential per-story builder, adversarial multi-vote review against the numbered ACs, manifest-flip + commit per accepted story; re-entrant off `sprint-status.yaml`). You do NOT impersonate Phase-4 personas (Dev, Code Reviewer) or hand-build stories — that's loki's job. For a **first real build**, install the project's toolchain first (an outward install — gate it) so the build/test/lint ACs actually execute. Full contract, the `args` shape, gates (billing must be subscription; `CLAUDE_CODE_WORKFLOWS=1`; no nested `claude -p`; no `ANTHROPIC_API_KEY` in env; never the lead as a Routine), and what's validated-so-far live in `references/loki.md` — read it before the build phase.
+When readiness is "go" and you judge the docs sufficient, the build runs as **Huldra** (`huldra.js`) — a Dynamic Workflow you launch per epic via the `Workflow` tool (sequential per-story builder, adversarial multi-vote review against the numbered ACs, manifest-flip + commit per accepted story; re-entrant off `sprint-status.yaml`). You do NOT impersonate Phase-4 personas (Dev, Code Reviewer) or hand-build stories — that's Huldra's job. For a **first real build**, install the project's toolchain first (an outward install — gate it) so the build/test/lint ACs actually execute. Full contract, the `args` shape, gates (billing must be subscription; `CLAUDE_CODE_WORKFLOWS=1`; no nested `claude -p`; no `ANTHROPIC_API_KEY` in env; never the lead as a Routine), and what's validated-so-far live in `references/huldra.md` — read it before the build phase.
 
 ## Runtime constraints
 

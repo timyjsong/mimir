@@ -38,4 +38,4 @@ Handoff:  <abs-path to .worker-handoff.md — only if you wrote richer detail fo
 - Decide for the user — surface `blocked` instead.
 - Expect to be re-prompted or to persist — you run once and return.
 - Edit project code outside BMAD's own output locations.
-- Touch Phase-4 build — that's loki, which runs as a workflow, not a subagent.
+- Touch Phase-4 build — that's Huldra, which runs as a workflow, not a subagent.

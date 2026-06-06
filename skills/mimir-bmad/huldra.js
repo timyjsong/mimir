@@ -1,5 +1,5 @@
 export const meta = {
-  name: 'loki',
+  name: 'huldra',
   description: 'BMAD autonomous build engine — drives one epic\'s stories from sprint-status.yaml: sequential per-story builder, adversarial multi-vote review against the numbered ACs, then manifest-flip + commit per accepted story. Re-entrant (skips done). Script does no fs/shell; agents do all disk work.',
   phases: [
     { title: 'Plan', detail: 'planner reads sprint-status.yaml → ordered non-done stories' },
@@ -18,7 +18,7 @@ export const meta = {
 // args may arrive as a parsed object or (a known Workflow footgun) a JSON string.
 const cfg = typeof args === 'string' && args.trim() ? JSON.parse(args) : args || {}
 const root = cfg.projectRoot
-if (!root) throw new Error('loki: args.projectRoot is required (absolute path to the BMAD project)')
+if (!root) throw new Error('huldra: args.projectRoot is required (absolute path to the BMAD project)')
 const epic = cfg.epic || null
 const onlyStories = Array.isArray(cfg.onlyStories) ? cfg.onlyStories : null
 const policy = {
@@ -119,7 +119,7 @@ const MANIFEST_SCHEMA = {
 // ── prompts ───────────────────────────────────────────────────────────────────
 const PATH_RULE = `CRITICAL — path resolution. Resolve EVERY path relative to the project root above. Story/manifest text may hardcode stale absolute paths (e.g. \`/home/tim/test/bmad-test/\` — note the SINGULAR "test"); these are WRONG. Ignore any baked-in absolute prefix and use the project root above instead.`
 
-const plannerPrompt = () => `You are loki's planner. Read the BMAD sprint manifest and return the ordered list of stories to build THIS run.
+const plannerPrompt = () => `You are Huldra's planner. Read the BMAD sprint manifest and return the ordered list of stories to build THIS run.
 
 Project root (cwd): ${root}
 Manifest: ${root}/_bmad-output/implementation-artifacts/sprint-status.yaml
@@ -135,7 +135,7 @@ Steps:
 
 Return the ordered stories (full key, absolute storyFile path, title, status, dependencies). If none are buildable (all done or filtered out), return an empty stories array and say so in notes.`
 
-const builderHeader = (story) => `You are loki's story builder — an autonomous BMAD dev agent implementing ONE story to its acceptance criteria.
+const builderHeader = (story) => `You are Brok, Huldra's story builder — an autonomous BMAD dev agent implementing ONE story to its acceptance criteria.
 
 Project root (cwd): ${root}   ← source of truth for ALL paths.
 Story spec: ${story.storyFile}   (key: ${story.key})
@@ -151,9 +151,9 @@ Your job:
 4. Do NOT overreach into later stories. The "What this story IS NOT" section is binding — where it says to stub an enum/rule, stub it (do not populate).
 ${inspectionOnly
   ? `5. INSPECTION ROUND — \`bun\` is NOT installed. Do NOT run \`bun\`, \`npm install\`, any build/test/lint command, or any network call. Write every source file by hand to the spec. Where an AC says to resolve dependency versions via a package manager (e.g. \`bun add fastify@latest\`), instead pin recent known-good EXACT versions by judgment and record in Completion Notes that they were hand-pinned (not resolved by bun). Where an AC can only be confirmed by RUNNING something (server boot, \`bun run build/test/lint\`, executing the binary), write the code/config so it WOULD pass and list that AC as runtime-unverifiable in your report and in Completion Notes.`
-  : `5. Run the build/test/lint the ACs require and make them actually pass.`}
+  : `5. Run the FULL verification the ACs require and make it genuinely pass: install deps, lint, run the tests, build the artifact, and — if the story has runtime ACs — boot it, exercise it (e.g. curl the routes), then STOP it and free any port/process you started (leave no stray server running). Record the REAL outputs (test results, resolved dependency versions, artifact/binary size, curl responses, exit codes) in the Dev Agent Record Completion Notes — reviewers will check them. If \`bun\` isn't on PATH it's at \`$HOME/.bun/bin\` (\`export PATH="$HOME/.bun/bin:$PATH"\`).`}
 6. Fill in the story file's "Dev Agent Record" section ONLY: Agent Model Used, Completion Notes List (include any fields the story asks for, hand-pinned versions, and runtime-unverifiable ACs), and the File List (every file created/modified). Do NOT alter the ACs, Tasks, or Dev Notes.
-7. Do NOT git-commit and do NOT edit sprint-status.yaml — loki handles review, the manifest flip, and the commit.
+7. Do NOT git-commit and do NOT edit sprint-status.yaml — Huldra handles review, the manifest flip, and the commit.
 
 Return your report: filesWritten, a short summary, deviations, and runtime-unverifiable ACs.`
 
@@ -167,7 +167,7 @@ Blocking reasons:
 ${reasons.map((r) => `- ${r}`).join('\n')}
 ` + builderBody()
 
-const reviewerPrompt = (story, i) => `You are loki's adversarial code reviewer #${i + 1} — fresh eyes, you did NOT write this code. Verify the builder's work against the story's numbered Acceptance Criteria. Default to skepticism: actively hunt for AC violations, scope-creep into later stories, and missing files.
+const reviewerPrompt = (story, i) => `You are Sindri, Huldra's adversarial code reviewer #${i + 1} — fresh eyes, you did NOT write this code. Verify the builder's work against the story's numbered Acceptance Criteria. Default to skepticism: actively hunt for AC violations, scope-creep into later stories, and missing files.
 
 Project root (cwd): ${root}
 Story spec (the ACs): ${story.storyFile}
@@ -178,14 +178,14 @@ Steps:
 2. Inspect what the builder actually produced under the project root (read the files; check the layout). You MAY run read-only commands — \`git status\`, \`git check-ignore\`, \`ls\`, \`grep\`, \`cat\` (git IS available).
 ${inspectionOnly
   ? `3. \`bun\` is NOT installed this round. ACs confirmable ONLY by running something (server boot, \`bun run build/test/lint\`, executing the binary) are UNVERIFIABLE — mark them \`unverifiable\`, NOT \`fail\`. Judge everything inspectable-by-reading strictly: directory layout, .gitignore contents, tsconfig strict flags, the 127.0.0.1 bind line, the response envelope, ESLint rule stubbed-not-populated, any enum stubbed-not-populated, src never importing spike/, placeholder files present, README scope, and no overreach into later stories.`
-  : `3. Run the build/test/lint/boot the ACs require and judge by the real outcome.`}
+  : `3. The toolchain IS installed (if \`bun\` isn't on PATH it's at \`$HOME/.bun/bin\`). You run CONCURRENTLY with the other reviewers, so independently run ONLY safe, non-conflicting checks — do NOT bind a fixed port and do NOT rebuild shared artifacts (both race). Safe: in-process tests (\`bun test\` uses app.inject — no port), \`bun run lint\`, reading the built \`dist/\` + its size, \`grep\`/\`git\`. For boot/bind/binary-run ACs, judge by inspecting the bind code + the builder's recorded runtime evidence in the Dev Agent Record — do NOT start a server on the app's fixed port yourself.`}
 4. Your FOCUS lens this review: ${lensFor(i)} (Still render a verdict across ALL ACs — the focus only guarantees coverage.)
 
 For each AC report pass | fail | unverifiable with a one-line note. Then vote:
 - verdict "accept" — every inspectable AC passes, no scope-creep, no missing required file (unverifiable ACs do NOT block this round).
 - verdict "reject" — otherwise; give concrete blockers, each naming the AC and what is wrong so the builder can fix it.`
 
-const manifestPrompt = (story) => `You are loki's manifest agent. The story below was ACCEPTED by code review — record it and commit.
+const manifestPrompt = (story) => `You are Huldra's manifest agent. The story below was ACCEPTED by code review — record it and commit.
 
 Project root (cwd): ${root}
 Manifest: ${root}/_bmad-output/implementation-artifacts/sprint-status.yaml
@@ -196,26 +196,26 @@ ${PATH_RULE}
 Steps:
 1. Edit the manifest: under \`development_status:\`, find the entry keyed exactly \`${story.key}:\` and change ONLY its \`status:\` field to \`done\`. Change nothing else — preserve every other story, all comments, formatting, and the epic/retrospective entries.
 2. Stage and commit the whole working tree on the current branch:
-   git -C ${root} add -A && git -C ${root} commit -m "loki: ${story.key} — ${story.title}"
+   git -C ${root} add -A && git -C ${root} commit -m "huldra: ${story.key} — ${story.title}"
    (The repo was git-init'd at setup; the commit lands on the current build branch.)
 3. Return the short commit SHA and confirm the status flip. Do NOT push. Do NOT touch \`_bmad/\` or planning artifacts beyond that one status line.`
 
 // ── orchestration ──────────────────────────────────────────────────────────────
-log(`loki: planning${epic ? ` epic ${epic}` : ''}${onlyStories ? ` (stories ${onlyStories.join(', ')})` : ''} in ${root}`)
+log(`huldra: planning${epic ? ` epic ${epic}` : ''}${onlyStories ? ` (stories ${onlyStories.join(', ')})` : ''} in ${root}`)
 const plan = await agent(plannerPrompt(), { label: 'planner', phase: 'Plan', schema: PLAN_SCHEMA })
 const stories = plan.stories || []
 if (!stories.length) {
-  log(`loki: nothing to build — ${plan.notes || 'all selected stories already done or filtered out'}`)
+  log(`huldra: nothing to build — ${plan.notes || 'all selected stories already done or filtered out'}`)
   return { epic, root, planNotes: plan.notes || '', built: [], stopped: false, reentrant: true }
 }
-log(`loki: ${stories.length} story(ies) to build: ${stories.map((s) => s.key).join(', ')}`)
+log(`huldra: ${stories.length} story(ies) to build: ${stories.map((s) => s.key).join(', ')}`)
 
 const built = []
 let stopped = false
 
 // SEQUENTIAL across stories (single dev, no parallelism) — story N+1 builds on N's tree.
 for (const story of stories) {
-  let report = await agent(builderPrompt(story), { label: `build:${story.key}`, phase: 'Build', schema: BUILDER_SCHEMA })
+  let report = await agent(builderPrompt(story), { label: `brok:${story.key}`, phase: 'Build', schema: BUILDER_SCHEMA })
 
   let accepted = false
   let reviews = []
@@ -225,30 +225,30 @@ for (const story of stories) {
       const reasons = reviews
         .filter(Boolean)
         .flatMap((r) => (r.verdict === 'reject' ? (r.blockers && r.blockers.length ? r.blockers : ['rejected (no explicit blocker given)']) : []))
-      log(`loki: ${story.key} retry ${attempt}/${policy.maxRetries} — ${reasons.length} blocker(s)`)
-      report = await agent(retryPrompt(story, reasons), { label: `build:${story.key}:retry${attempt}`, phase: 'Build', schema: BUILDER_SCHEMA })
+      log(`huldra: ${story.key} retry ${attempt}/${policy.maxRetries} — ${reasons.length} blocker(s)`)
+      report = await agent(retryPrompt(story, reasons), { label: `brok:${story.key}:retry${attempt}`, phase: 'Build', schema: BUILDER_SCHEMA })
     }
     // The ONLY fan-out: independent adversarial reviewers vote.
     reviews = await parallel(
       range(policy.voters).map((i) => () =>
-        agent(reviewerPrompt(story, i), { label: `review:${story.key}:v${i + 1}`, phase: 'Review', schema: REVIEW_SCHEMA })
+        agent(reviewerPrompt(story, i), { label: `sindri:${story.key}:v${i + 1}`, phase: 'Review', schema: REVIEW_SCHEMA })
       )
     )
     const valid = reviews.filter(Boolean)
     const accepts = valid.filter((r) => r.verdict === 'accept').length
-    log(`loki: ${story.key} review attempt ${attempt + 1} — ${accepts}/${valid.length} accept (need ${policy.threshold})`)
+    log(`huldra: ${story.key} review attempt ${attempt + 1} — ${accepts}/${valid.length} accept (need ${policy.threshold})`)
     if (accepts >= policy.threshold) { accepted = true; break }
   }
 
   if (!accepted) {
-    log(`loki: ${story.key} REJECTED after ${attempt} attempt(s) — stopping epic.`)
+    log(`huldra: ${story.key} REJECTED after ${attempt} attempt(s) — stopping epic.`)
     built.push({ key: story.key, title: story.title, accepted: false, attempts: attempt, report, reviews: reviews.filter(Boolean), commitSha: null })
     stopped = true
     break
   }
 
   const manifest = await agent(manifestPrompt(story), { label: `commit:${story.key}`, phase: 'Commit', schema: MANIFEST_SCHEMA })
-  log(`loki: ${story.key} ACCEPTED → status:done${manifest.commitSha ? ` @ ${manifest.commitSha}` : ''}`)
+  log(`huldra: ${story.key} ACCEPTED → status:done${manifest.commitSha ? ` @ ${manifest.commitSha}` : ''}`)
   built.push({
     key: story.key,
     title: story.title,
