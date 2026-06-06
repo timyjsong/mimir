@@ -100,6 +100,7 @@ const REVIEW_SCHEMA = {
       },
     },
     blockers: { type: 'array', items: { type: 'string' }, description: 'concrete reasons to reject; each names the AC + what is wrong' },
+    reproducedTestFailure: { type: 'boolean', description: 'true ONLY if you EXECUTED tests this review and observed a real failing run yourself (including an intermittent/flaky failure you reproduced)' },
   },
   required: ['verdict', 'acFindings'],
 }
@@ -146,7 +147,7 @@ TOOLCHAIN THIS RUN: ${toolchainNote}`
 const builderBody = () => `
 Your job:
 1. Read the WHOLE story spec file — the numbered Acceptance Criteria, Tasks/Subtasks, and Dev Notes are your complete contract.
-2. Implement every AC you can with the toolchain stated above. Write all required source files into the tree under the project root.
+2. Implement every AC you can with the toolchain stated above. Write all required source files into the tree under the project root. Tests you write MUST be deterministic — never derive fixtures or assertions from wall-clock time (two \`Date\` reads race); freeze or inject the clock (e.g. bun:test \`setSystemTime\`) when behavior depends on time.
 3. Treat \`_bmad-output/\` planning artifacts, \`_bmad/\` tooling, and \`spike/\` as READ-ONLY — with ONE exception: this story's own spec file, whose "Dev Agent Record" section you fill in at step 6. Touch nothing else under those paths.
 4. Do NOT overreach into later stories. The "What this story IS NOT" section is binding — where it says to stub an enum/rule, stub it (do not populate).
 ${inspectionOnly
@@ -178,7 +179,7 @@ Steps:
 2. Inspect what the builder actually produced under the project root (read the files; check the layout). You MAY run read-only commands — \`git status\`, \`git check-ignore\`, \`ls\`, \`grep\`, \`cat\` (git IS available).
 ${inspectionOnly
   ? `3. \`bun\` is NOT installed this round. ACs confirmable ONLY by running something (server boot, \`bun run build/test/lint\`, executing the binary) are UNVERIFIABLE — mark them \`unverifiable\`, NOT \`fail\`. Judge everything inspectable-by-reading strictly: directory layout, .gitignore contents, tsconfig strict flags, the 127.0.0.1 bind line, the response envelope, ESLint rule stubbed-not-populated, any enum stubbed-not-populated, src never importing spike/, placeholder files present, README scope, and no overreach into later stories.`
-  : `3. The toolchain IS installed (if \`bun\` isn't on PATH it's at \`$HOME/.bun/bin\`). You run CONCURRENTLY with the other reviewers, so independently run ONLY safe, non-conflicting checks — do NOT bind a fixed port and do NOT rebuild shared artifacts (both race). Safe: in-process tests (\`bun test\` uses app.inject — no port), \`bun run lint\`, reading the built \`dist/\` + its size, \`grep\`/\`git\`. For boot/bind/binary-run ACs, judge by inspecting the bind code + the builder's recorded runtime evidence in the Dev Agent Record — do NOT start a server on the app's fixed port yourself.`}
+  : `3. The toolchain IS installed (if \`bun\` isn't on PATH it's at \`$HOME/.bun/bin\`). You run CONCURRENTLY with the other reviewers, so independently run ONLY safe, non-conflicting checks — do NOT bind a fixed port and do NOT rebuild shared artifacts (both race). Safe: in-process tests (\`bun test\` uses app.inject — no port), \`bun run lint\`, reading the built \`dist/\` + its size, \`grep\`/\`git\`. For boot/bind/binary-run ACs, judge by inspecting the bind code + the builder's recorded runtime evidence in the Dev Agent Record — do NOT start a server on the app's fixed port yourself. If you suspect a test is flaky/nondeterministic, run it several times. An EXECUTED, observed test failure (even intermittent) is a HARD BLOCKER — executed evidence outweighs votes: set reproducedTestFailure=true, verdict=reject, and name the failing test + the observed failure rate in blockers.`}
 4. Your FOCUS lens this review: ${lensFor(i)} (Still render a verdict across ALL ACs — the focus only guarantees coverage.)
 
 For each AC report pass | fail | unverifiable with a one-line note. Then vote:
@@ -224,7 +225,7 @@ for (const story of stories) {
     if (attempt > 0) {
       const reasons = reviews
         .filter(Boolean)
-        .flatMap((r) => (r.verdict === 'reject' ? (r.blockers && r.blockers.length ? r.blockers : ['rejected (no explicit blocker given)']) : []))
+        .flatMap((r) => (r.verdict === 'reject' || r.reproducedTestFailure ? (r.blockers && r.blockers.length ? r.blockers : ['rejected (no explicit blocker given)']) : []))
       log(`huldra: ${story.key} retry ${attempt}/${policy.maxRetries} — ${reasons.length} blocker(s)`)
       report = await agent(retryPrompt(story, reasons), { label: `brok:${story.key}:retry${attempt}`, phase: 'Build', schema: BUILDER_SCHEMA })
     }
@@ -236,8 +237,12 @@ for (const story of stories) {
     )
     const valid = reviews.filter(Boolean)
     const accepts = valid.filter((r) => r.verdict === 'accept').length
-    log(`huldra: ${story.key} review attempt ${attempt + 1} — ${accepts}/${valid.length} accept (need ${policy.threshold})`)
-    if (accepts >= policy.threshold) { accepted = true; break }
+    // Executed evidence beats votes: a reviewer who REPRODUCED a failing test run
+    // hard-blocks acceptance regardless of the tally (epic-1 finding: a correct,
+    // reproduced flake dissent was outvoted 2-1).
+    const hardBlocks = valid.filter((r) => r.reproducedTestFailure)
+    log(`huldra: ${story.key} review attempt ${attempt + 1} — ${accepts}/${valid.length} accept (need ${policy.threshold})${hardBlocks.length ? ` — HARD BLOCK: ${hardBlocks.length} reviewer(s) reproduced a failing test run` : ''}`)
+    if (!hardBlocks.length && accepts >= policy.threshold) { accepted = true; break }
   }
 
   if (!accepted) {
