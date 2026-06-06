@@ -101,6 +101,12 @@ on-demand references where needed.
   from *the default* to *one option*. Future playbooks (diagnostics, brownfield audit) add
   here without touching the brain. **BMAD-as-playbook must drive the lifecycle as well as it
   does today — guarded by the 28 existing BMAD scenarios (the regression backstop).**
+  **Amendment (2026-06-06 — Huldra-always):** Huldra is the brain's *universal* build
+  engine, not BMAD's — its prerequisite is the build **contract** (manifest + AC'd
+  story files); BMAD is one producer of that contract, Mimir-direct thin tickets the
+  other. The lead never implements (strict floor; `reviewPolicy` scales down for
+  micro-tickets). Pre-implementation — see `skills/mimir-bmad/references/huldra.md`
+  → *Direction*.
 
 ## 5. The entry model — read-room → triage → intent → route
 
