@@ -4,8 +4,7 @@ Read this before the build phase. **Huldra is a Dynamic Workflow, not a subagent
 
 ## Status
 
-**Implemented.** Huldra ships as `skills/mimir-bmad/huldra.js` and the mechanism is validated end-to-end (planner → builder → adversarial review → manifest-flip → commit → re-entrancy). What's still owed: a **real-toolchain build** (the validation so far was an *inspection round* with no build tools installed — see "What's validated"), and the **reject → retry → stop-epic** path is written but unexercised. (`~/.claude/agents/loki-worker.md` is a superseded stub — do not spawn it; the build is a workflow.)
-
+**Implemented.** Huldra ships as `skills/mimir-bmad/huldra.js` and the mechanism is validated end-to-end (planner → builder → adversarial review → manifest-flip → commit → re-entrancy). What's still owed: a **real-toolchain build** (the validation so far was an *inspection round* with no build tools installed — see "What's validated"), and the **reject → retry → stop-epic** path is written but unexercised.
 ## Shape
 
 - **One workflow per epic.** The lead invokes `huldra.js` via the `Workflow` tool, scoped to an epic. Inside, a **planner** agent reads `sprint-status.yaml` and returns the buildable stories (non-`done`, in manifest key order = execution order). Then, **sequentially** (single dev, no parallelism — story N+1 builds on N's tree), each story runs: a **builder** agent (**Brok**) gets the *whole story file* as its spec and implements it → **N adversarial reviewers** (**Sindri**, the only fan-out) vote against the numbered ACs → on majority-accept a **manifest** agent flips that story's `status: done` and commits; on reject, one retry with the blockers, then stop the epic.
