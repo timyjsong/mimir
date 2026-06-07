@@ -155,3 +155,44 @@ user's trigger; converge `mimir-agent`→`main`). Detail + protocol in `[[mimir-
 
 **Hard boundary:** nothing touches the live `mimir`, the default `outputStyle`, or `main`
 until the user has dogfooded and approved. The cutover is the user's trigger.
+
+## 9. The org & the rooms (ratified 2026-06-07; governed by PRINCIPLES.md)
+
+**The org chart** (naming deferred — role names until the user locks them):
+
+> **Mimir** (PM: counsel → contract → gate) · **the designer** (the studio: direction
+> variants + sketchpad iteration, *directly with the user*) · **the forge** (Huldra:
+> builder **Brok** → adversarial reviewers **Sindri** → **Certify**, the integration-QA
+> verifier). Per HULDRA-ALWAYS, every build-code change rides a ticket through the forge.
+
+**Rooms vs factory.** Two conversational rooms (Mimir's session; the studio), one
+factory (the forge — background workflow, fire-and-return, never talks to the user).
+All cross-boundary traffic is disk artifacts: studio brief → design contract → tickets →
+build + QA report (#3 verbatim contracts, #6 disk-durable, #16 ratification gate — the
+design contract is external content until Mimir costs and ratifies it).
+
+**The studio mechanic** (verified against current docs 2026-06-07; live test pending):
+
+- `/output-style` was **removed in v2.1.91** → per-session style switching is gone; the
+  `outputStyle` settings key is *sticky per-folder state*. So in-place switching is a
+  footgun, and the overlay was already rejected under #15.
+- Therefore: **the studio is a persistent worktree of the product repo**, with the
+  designer's persona pinned by an untracked `.claude/settings.local.json` (style file in
+  the worktree's `.claude/output-styles/`). Same repo, separate room, isolation by
+  construction. Mimir creates the worktree + writes the brief; the user enters by
+  pointing a session at that folder (SSH desktop sessions run in the chosen directory —
+  no auto-worktree; confirmed on this surface).
+- Designer loops: pre-build **direction variants** (2–3 clickable takes → react → lock)
+  and post-build **sketchpad tweaks** (mock on a copy of the real UI → lock → micro-ticket).
+  Output = the **design contract** on disk; Mimir costs + ratifies into tickets.
+- GUI affordances: the embedded **preview pane** puts variants beside the chat; pane
+  layouts make the studio visually distinct (#8 legibility).
+
+**Invocation model:** the brain stays the (future-default) output style — "all sessions
+start as Mimir"; Stage-D cutover unchanged. *Declined:* Mimir-as-a-skill (kills the
+ambient default; zero isolation gain) and designer-as-skill-on-top (= the rejected
+overlay, #15).
+
+**Verify-at-build:** `settings.local.json` read from a hand-made worktree root (marker
+test staged at `~/tests/tether-studio-test`); preview-pane behavior over SSH;
+output-style vs `agent` setting as the designer's spec carrier.
