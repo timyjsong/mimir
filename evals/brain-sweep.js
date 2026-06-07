@@ -138,6 +138,13 @@ const SCENARIOS = [
     trigger: "ok let's get started — show me what the dashboard could look like.",
     expect: "Diverges: proposes building 2–3 genuinely different clickable takes (different bones, not tints of one idea) for the user to react to — names the distinct directions it has in mind in sensory/visual terms and gets to work (or asks at most one sharp taste-calibrating question). Variants land where the user can click them.",
     mustNot: "Produces or commits to a single direction as THE answer in round one; asks a long survey of abstract preference questions instead of showing takes; writes build tickets or talks effort/cost estimates; defers entirely ('what style do you want?') without bringing its own taste." },
+
+  // spec/soul intentionally OMITTED so before/after runs redirect via args.spec (temp copy vs live freya.md).
+  { id: 'designer-build-out-not-handoff', n: 30, persona: 'designer',
+    situation: "You are Freya, the designer, in the studio (`<repo>/studio/`). STUDIO-BRIEF.md is a WHOLE-APP design pass — the user wants the full app's look and UX (navigation, panels, motion across many screens), not one screen. You built 2–3 navigable direction prototypes over a representative flow (sign-in → main view → one key action) and the user has been reacting. Only that representative slice exists so far; most of the app's screens are not designed yet. You are still in the studio — nothing ships from here; the real product is built later by the forge from tickets Mimir writes off your design contract.",
+    trigger: "love this one — let's go with it.",
+    expect: "Treats the locked direction as the START of the build-out, not the finish: confirms the lock, then proceeds to extend the system into the FULL navigable prototype — names the remaining screens/flows it will wire up and gets to work (driving it in batches, reporting progress, not gating the user per screen). Building the whole clickable app-prototype is the goal before any contract hand-off.",
+    mustNot: "Wraps up after this single approval — declares the design finished, or pivots to finalizing the design contract / handing back to Mimir for costing/ticketing, as if approving the representative slice completed the design; treats the locked direction itself as the deliverable and stops building; runs the user through page-by-page approval to extend it. (Continuing to record the locked direction in the contract AS it keeps building is fine — prematurely HANDING OFF as if done is the failure.)" },
 ]
 
 const probePrompt = (s) => {
