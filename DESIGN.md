@@ -177,19 +177,24 @@ design contract is external content until Mimir costs and ratifies it).
 - `/output-style` was **removed in v2.1.91** → per-session style switching is gone; the
   `outputStyle` settings key is *sticky per-folder state*. So in-place switching is a
   footgun, and the overlay was already rejected under #15.
-- Therefore: **the studio is a persistent worktree of the product repo, nested at
-  `<repo>/studio/`** (gitignored from the main checkout; locked with the user
-  2026-06-07 — one project root, the studio inside it), with the designer's persona
-  pinned by an untracked `.claude/settings.local.json`. **Carrier — RESOLVED
-  (docs-verified 2026-06-07): `outputStyle` + worktree-local style file.** The agent
-  mechanism (`--agent` / the `agent` setting) is folder-pinnable but **replaces the
-  main-session system prompt entirely** ("the same way `--system-prompt` does") with
-  no `keep-coding-instructions` equivalent — an agent-carried designer would lose CC's
-  engineering competence, so the pre-agreed fallback applies. Same repo, separate
-  room, isolation by construction. Mimir creates the worktree + writes the brief;
-  **the user enters by opening a new session pointed at `<repo>/studio/`** (SSH
-  desktop sessions run in the chosen directory — no auto-worktree; confirmed on this
-  surface).
+- Therefore: **the studio is a plain, gitignored folder at `<repo>/studio/`**
+  (locked with the user 2026-06-07 — one project root, the studio inside it), with
+  Freya's persona pinned by its own untracked `.claude/settings.local.json` + local
+  style file. **Verified live 2026-06-07: a plain subfolder resolves its own
+  settings** (marker test inside the Tether repo — pin fired, no PR banner). The
+  earlier *worktree* mechanic is **superseded**: its branch isolation was consumed by
+  nothing (Freya's output is files Mimir reads, never merged commits) and its
+  divergent branch produced "Create PR" banner friction in the GUI. The folder +
+  ignore rules give the same isolation by construction; Freya treats the parent tree
+  as read-only and copies UI into `studio/sketchpad/` to riff on it. **Carrier —
+  RESOLVED (docs-verified 2026-06-07): `outputStyle` + folder-local style file.** The
+  agent mechanism (`--agent` / the `agent` setting) is folder-pinnable but **replaces
+  the main-session system prompt entirely** ("the same way `--system-prompt` does")
+  with no `keep-coding-instructions` equivalent — an agent-carried designer would
+  lose CC's engineering competence, so the pre-agreed fallback applies. Mimir creates
+  the folder + pin + brief; **the user enters by opening a new session pointed at
+  `<repo>/studio/`** (SSH desktop sessions run in the chosen directory; confirmed on
+  this surface).
 - Designer loops: pre-build **direction variants** (2–3 clickable takes → react → lock)
   and post-build **sketchpad tweaks** (mock on a copy of the real UI → lock → micro-ticket).
   Output = the **design contract** on disk; Mimir costs + ratifies into tickets.
@@ -202,6 +207,8 @@ ambient default; zero isolation gain) and designer-as-skill-on-top (= the reject
 overlay, #15).
 
 **Verify-at-build:** ✅ `settings.local.json` read from a hand-made worktree root
-(live marker test PASSED, `~/tests/tether-studio-test`); ✅ output-style vs `agent`
-carrier (resolved above — output-style). Still open: preview-pane behavior over SSH
-(verifies itself on first real studio use).
+(live marker test PASSED, `~/tests/tether-studio-test`); ✅ **plain gitignored
+subfolder resolves its own pin** (live marker test PASSED in the Tether repo,
+2026-06-07 — basis for dropping the worktree); ✅ output-style vs `agent` carrier
+(resolved above — output-style); ✅ preview pane over SSH (worked on first studio
+use, 2026-06-07).

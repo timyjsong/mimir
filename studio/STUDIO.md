@@ -8,10 +8,12 @@
 
 ## What it is
 
-A second conversational room: a **persistent nested worktree of the product repo at
-`<repo>/studio/`**, persona-pinned to **Freya** by folder-local settings. The user
-enters by opening a new session pointed at `<repo>/studio/` — that folder is always
-Freya; the repo root is always Mimir. Nothing sticky, nothing to flip back.
+A second conversational room: a **plain, gitignored folder at `<repo>/studio/`**,
+persona-pinned to **Freya** by its own folder-local settings. (Verified live: a plain
+subfolder's `.claude/settings.local.json` + style file load at session start — no
+worktree, no branch, no PR banner.) The user enters by opening a new session pointed
+at `<repo>/studio/` — that folder is always Freya; the repo root is always Mimir.
+Nothing sticky, nothing to flip back.
 
 Use it when the work is visual direction or iteration: pre-build direction variants,
 post-build sketchpad tweaks. Don't send errands there, and don't do taste-led design
@@ -22,22 +24,21 @@ in the PM room — the mindsets are separate on purpose.
 Idempotent — skip any step already true:
 
 1. **Ignore rules first** (structural no-leak): ensure the product repo's `.gitignore`
-   contains `studio/` and `.claude/settings.local.json`. Commit this BEFORE creating
-   the studio branch so the branch inherits it — the persona pin must never be
-   committable, on either branch.
-2. **Worktree:** `git -C <repo> worktree add studio -b studio` — one project root,
-   the studio nested inside it, its own branch.
-3. **Pin the persona** (worktree-local, untracked):
+   contains `studio/` and `.claude/settings.local.json`, and that neither is already
+   tracked (`git rm --cached` if so — the persona pin and the studio must never be
+   committable). Commit the ignore rules.
+2. **The folder + the pin** (all local, all ignored):
+   - `mkdir -p <repo>/studio/.claude/output-styles`
    - `<repo>/studio/.claude/settings.local.json` → `{ "outputStyle": "freya" }`
    - `<repo>/studio/.claude/output-styles/freya.md` ← copy the template from
      `~/.claude/mimir/studio/freya.md`
-4. **Write the brief:** `<repo>/studio/STUDIO-BRIEF.md` — what's being designed,
+3. **Write the brief:** `<repo>/studio/STUDIO-BRIEF.md` — what's being designed,
    product context (one paragraph, not the PRD), hard constraints (platform, a11y,
    perf budgets, brand givens), and what to come back with (e.g. "2–3 direction
-   variants for the dashboard; locked tokens for color/type").
-5. **Send the user:** "to the studio — open a new session at `<repo>/studio/`."
-   (Verified mechanic: folder-local settings + worktree-local style file load at
-   session start; sessions run in the chosen directory.)
+   variants for the dashboard; locked tokens for color/type"). For whole-app work,
+   say so — Freya's takes become navigable prototypes over a representative flow.
+4. **Send the user:** "to the studio — open a new session at `<repo>/studio/`."
+   (Sessions run in the chosen directory; the folder's local settings load at start.)
 
 ## While the studio is open
 
@@ -65,4 +66,4 @@ When the user returns with studio output, read `<repo>/studio/DESIGN-CONTRACT.md
 ## Teardown
 
 Don't. The studio is persistent — the contract accretes, the sketchpad stays warm.
-If a product repo is being archived, `git worktree remove studio` is the cleanup.
+If a product repo is being archived, deleting the folder is the cleanup.
