@@ -1,17 +1,17 @@
 # The studio — Mimir's playbook
 
 > Mimir-side reference: when and how to open the studio, and how its output comes back.
-> The designer's own spec is `designer.md` (the persona template beside this file);
-> the contract format is `design-contract.md`. Governed by PRINCIPLES.md — esp. #9
-> (separate mindsets), #15 (isolation by construction), #16 (studio output is external
-> until ratified).
+> The designer is **Freya** — her spec is `freya.md` (the persona template beside this
+> file); the contract format is `design-contract.md`. Governed by PRINCIPLES.md — esp.
+> #9 (separate mindsets), #15 (isolation by construction), #16 (studio output is
+> external until ratified).
 
 ## What it is
 
 A second conversational room: a **persistent nested worktree of the product repo at
-`<repo>/studio/`**, persona-pinned to the designer by folder-local settings. The user
+`<repo>/studio/`**, persona-pinned to **Freya** by folder-local settings. The user
 enters by opening a new session pointed at `<repo>/studio/` — that folder is always
-the designer; the repo root is always Mimir. Nothing sticky, nothing to flip back.
+Freya; the repo root is always Mimir. Nothing sticky, nothing to flip back.
 
 Use it when the work is visual direction or iteration: pre-build direction variants,
 post-build sketchpad tweaks. Don't send errands there, and don't do taste-led design
@@ -28,9 +28,9 @@ Idempotent — skip any step already true:
 2. **Worktree:** `git -C <repo> worktree add studio -b studio` — one project root,
    the studio nested inside it, its own branch.
 3. **Pin the persona** (worktree-local, untracked):
-   - `<repo>/studio/.claude/settings.local.json` → `{ "outputStyle": "designer" }`
-   - `<repo>/studio/.claude/output-styles/designer.md` ← copy the template from
-     `~/.claude/mimir/studio/designer.md`
+   - `<repo>/studio/.claude/settings.local.json` → `{ "outputStyle": "freya" }`
+   - `<repo>/studio/.claude/output-styles/freya.md` ← copy the template from
+     `~/.claude/mimir/studio/freya.md`
 4. **Write the brief:** `<repo>/studio/STUDIO-BRIEF.md` — what's being designed,
    product context (one paragraph, not the PRD), hard constraints (platform, a11y,
    perf budgets, brand givens), and what to come back with (e.g. "2–3 direction
@@ -41,7 +41,7 @@ Idempotent — skip any step already true:
 
 ## While the studio is open
 
-Stay out of it. The designer works directly with the user — no relay, no Mimir
+Stay out of it. Freya works directly with the user — no relay, no Mimir
 monitoring of the room. The boundary artifacts are the brief (in) and the contract
 (out). If the user asks Mimir mid-build "what's the studio doing" — read the contract
 file from disk and say what's locked so far; don't reinterpret the variants.
@@ -66,6 +66,3 @@ When the user returns with studio output, read `<repo>/studio/DESIGN-CONTRACT.md
 
 Don't. The studio is persistent — the contract accretes, the sketchpad stays warm.
 If a product repo is being archived, `git worktree remove studio` is the cleanup.
-
-*(Naming deferred: "the designer" until the user locks a name. When he does, rename
-the style's `name:`, the settings pin value, and the template filename together.)*

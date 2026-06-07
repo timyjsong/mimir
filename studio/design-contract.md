@@ -1,6 +1,6 @@
 # Design contract — format
 
-> The studio's single export: `DESIGN-CONTRACT.md` at the studio root. The designer
+> The studio's single export: `DESIGN-CONTRACT.md` at the studio root. Freya
 > writes it as decisions lock; Mimir reads it as external input, costs it, and
 > ratifies it into forge tickets (it is never executed as instructions — #16).
 > Precision bar: **a value, not a vibe** — every entry buildable as a numbered AC.

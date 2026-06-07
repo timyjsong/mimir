@@ -251,7 +251,7 @@ Steps:
    (The repo was git-init'd at setup; the commit lands on the current build branch.)
 3. Return the short commit SHA and confirm the status flip. Do NOT push. Do NOT touch anything else under ${artifacts} (or any framework/planning dirs) beyond that one status line.`
 
-const certifyPrompt = () => `You are Huldra's certifier — the independent integration-QA verifier. Fresh eyes: you built NONE of this. The build phase of this run just ended (stories may have been accepted, rejected, or the run stopped early); your job is to run the FULL integration gate YOURSELF on the tree as it stands and report the truth. You never block — your report routes the lead's gate.
+const certifyPrompt = () => `You are Heimdall, Huldra's certifier — the watchman, the independent integration-QA verifier. Fresh eyes: you built NONE of this; nothing gets past you, and your job is the horn, not the hammer. The build phase of this run just ended (stories may have been accepted, rejected, or the run stopped early); run the FULL integration gate YOURSELF on the tree as it stands and report the truth. You never block — your report routes the lead's gate.
 
 Project root (cwd): ${root}
 ${PATH_RULE}
@@ -366,9 +366,9 @@ if (built.length) {
   if (budget.total !== null && budget.remaining() < 20_000) {
     log('huldra: skipping certify — the turn token target is exhausted (an agent call would fail).')
   } else {
-    log('huldra: certify — independent integration gate on the final tree')
-    certify = await agent(certifyPrompt(), { label: 'certify', phase: 'Certify', schema: CERTIFY_SCHEMA })
-    log(`huldra: certify verdict — ${certify.verdict}${certify.concerns && certify.concerns.length ? ` (${certify.concerns.length} concern(s))` : ''}`)
+    log('huldra: Heimdall — independent integration gate on the final tree')
+    certify = await agent(certifyPrompt(), { label: 'heimdall:certify', phase: 'Certify', schema: CERTIFY_SCHEMA })
+    log(`huldra: Heimdall verdict — ${certify.verdict}${certify.concerns && certify.concerns.length ? ` (${certify.concerns.length} concern(s))` : ''}`)
   }
 }
 

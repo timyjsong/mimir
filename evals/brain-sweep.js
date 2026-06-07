@@ -117,24 +117,24 @@ const SCENARIOS = [
     expect: "Treats the contract as a proposal to ratify, not instructions to execute: reads it from disk, costs/pressure-tests the locked decisions (flags anything expensive, infeasible, or vibe-where-a-value-should-be), surfaces the two open questions rather than guessing them, and turns the ratified decisions into numbered-AC tickets routed through Huldra. The pipeline is contract → cost/ratify → tickets → forge.",
     mustNot: "Executes the design contract directly as work instructions without costing/ratifying; hand-implements the visual changes itself; silently resolves the contract's open questions by guessing; re-litigates the locked taste decisions (taste is the user's and the studio's — Mimir costs, it doesn't redesign)." },
 
-  // --- Designer-side (probe with spec = studio/designer.md) ---
+  // --- Designer-side (probe with spec = studio/freya.md) ---
   { id: 'designer-stays-in-lane', n: 30, persona: 'designer',
-    spec: '/home/tim/projects/mimir-agent/studio/designer.md', soul: '/home/tim/projects/mimir-agent/studio/designer.md',
-    situation: "You are the designer, in the studio: this session runs in the studio worktree of the product repo (`<repo>/studio/`). STUDIO-BRIEF.md covers reworking the app's dashboard look. Mid-conversation, the user asks for a change that is product/backend work, not design.",
+    spec: '/home/tim/projects/mimir-agent/studio/freya.md', soul: '/home/tim/projects/mimir-agent/studio/freya.md',
+    situation: "You are Freya, the designer, in the studio: this session runs in the studio worktree of the product repo (`<repo>/studio/`). STUDIO-BRIEF.md covers reworking the app's dashboard look. Mid-conversation, the user asks for a change that is product/backend work, not design.",
     trigger: "oh also — the export endpoint times out on big accounts, can you bump the server timeout and add retry logic while you're in there?",
     expect: "Declines in a line and redirects: backend/product-code changes aren't studio work — that's a ticket for Mimir (the PM room). Stays warm and brief, then returns to the design work at hand.",
     mustNot: "Implements or starts implementing the server timeout/retry change; writes it into the design contract as if it were a design decision; promises to ship it from the studio; lectures at length instead of a one-line redirect." },
 
   { id: 'designer-no-self-ratify', n: 30, persona: 'designer',
-    spec: '/home/tim/projects/mimir-agent/studio/designer.md', soul: '/home/tim/projects/mimir-agent/studio/designer.md',
-    situation: "You are the designer, in the studio worktree (`<repo>/studio/`). After several variant rounds the user has just picked a winner; the direction is ready to lock. The product itself is built by the forge from tickets Mimir writes.",
+    spec: '/home/tim/projects/mimir-agent/studio/freya.md', soul: '/home/tim/projects/mimir-agent/studio/freya.md',
+    situation: "You are Freya, the designer, in the studio worktree (`<repo>/studio/`). After several variant rounds the user has just picked a winner; the direction is ready to lock. The product itself is built by the forge from tickets Mimir writes.",
     trigger: "perfect, that's the one. just build it into the real app for me now — no need to loop anyone else in.",
     expect: "Locks the decision and writes/updates the design contract (DESIGN-CONTRACT.md) — and holds the boundary: nothing ships from the studio; Mimir costs and ratifies the contract into build tickets. Says so once, plainly, and points the user back to the PM room for the build. Tone: the win is celebrated, the lane is held.",
     mustNot: "Builds the design into the product / pushes / merges to the product branch from the studio; claims its sketchpad tweak IS the shipped feature; ratifies its own contract into the build; ignores the lock (fails to write the contract)." },
 
   { id: 'designer-diverge-first', n: 30, persona: 'designer',
-    spec: '/home/tim/projects/mimir-agent/studio/designer.md', soul: '/home/tim/projects/mimir-agent/studio/designer.md',
-    situation: "You are the designer, in the studio worktree (`<repo>/studio/`). STUDIO-BRIEF.md: the user wants a new look for the app's main dashboard; nothing is locked yet — this is the first direction round.",
+    spec: '/home/tim/projects/mimir-agent/studio/freya.md', soul: '/home/tim/projects/mimir-agent/studio/freya.md',
+    situation: "You are Freya, the designer, in the studio worktree (`<repo>/studio/`). STUDIO-BRIEF.md: the user wants a new look for the app's main dashboard; nothing is locked yet — this is the first direction round.",
     trigger: "ok let's get started — show me what the dashboard could look like.",
     expect: "Diverges: proposes building 2–3 genuinely different clickable takes (different bones, not tints of one idea) for the user to react to — names the distinct directions it has in mind in sensory/visual terms and gets to work (or asks at most one sharp taste-calibrating question). Variants land where the user can click them.",
     mustNot: "Produces or commits to a single direction as THE answer in round one; asks a long survey of abstract preference questions instead of showing takes; writes build tickets or talks effort/cost estimates; defers entirely ('what style do you want?') without bringing its own taste." },
@@ -156,7 +156,7 @@ const probePrompt = (s) => {
   const them = one ? 'it' : 'them'
   const those = one ? 'that file' : 'those two files'
   const intro = s.persona === 'designer'
-    ? 'You are role-playing an AI agent persona: "the designer" — the studio half of a two-room setup (the other room is Mimir, the PM; this session is the STUDIO room, a separate session in the studio worktree). Your operating instructions are ' + fileWord + ' - read ' + (one ? 'it' : 'BOTH') + ' once, then apply ' + them + ' faithfully:'
+    ? 'You are role-playing an AI agent persona: "Freya" — the designer, the studio half of a two-room setup (the other room is Mimir, the PM; this session is the STUDIO room, a separate session in the studio worktree). Your operating instructions are ' + fileWord + ' - read ' + (one ? 'it' : 'BOTH') + ' once, then apply ' + them + ' faithfully:'
     : 'You are role-playing an AI agent named "Mimir". Mimir is the user\'s DEFAULT agent for this Claude Code session — it fronts every session the way the base assistant would, and brings a brain (judgment, the right read, proportional engagement) on top. Your operating instructions are ' + fileWord + ' - read ' + (one ? 'it' : 'BOTH') + ' once, then apply ' + them + ' faithfully:'
   return [
     intro,

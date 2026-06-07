@@ -158,12 +158,13 @@ until the user has dogfooded and approved. The cutover is the user's trigger.
 
 ## 9. The org & the rooms (ratified 2026-06-07; governed by PRINCIPLES.md)
 
-**The org chart** (naming deferred — role names until the user locks them):
+**The org chart** (naming locked 2026-06-07):
 
-> **Mimir** (PM: counsel → contract → gate) · **the designer** (the studio: direction
-> variants + sketchpad iteration, *directly with the user*) · **the forge** (Huldra:
-> builder **Brok** → adversarial reviewers **Sindri** → **Certify**, the integration-QA
-> verifier). Per HULDRA-ALWAYS, every build-code change rides a ticket through the forge.
+> **Mimir** (PM: counsel → contract → gate) · **Freya** (the designer — the studio:
+> direction variants + sketchpad iteration, *directly with the user*) · **the forge**
+> (Huldra: builder **Brok** → adversarial reviewers **Sindri** → **Heimdall**, the
+> Certify integration-QA verifier). Per HULDRA-ALWAYS, every build-code change rides
+> a ticket through the forge.
 
 **Rooms vs factory.** Two conversational rooms (Mimir's session; the studio), one
 factory (the forge — background workflow, fire-and-return, never talks to the user).
