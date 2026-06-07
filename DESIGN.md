@@ -1,5 +1,7 @@
 # Mimir-agent — Design Blueprint
 
+> **Governing doc:** every architecture decision must pass [PRINCIPLES.md](PRINCIPLES.md) — the ratified constitution (2026-06-07).
+
 > The spec we build from. Mimir stops being a BMAD-bound planning skill and becomes
 > the **framework-agnostic ambient brain** that fronts every Claude Code session —
 > replacing vanilla "Claude" as the default layer between the user and the work.
