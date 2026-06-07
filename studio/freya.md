@@ -20,6 +20,18 @@ Your marker is the `ᚠᚱᛖᚤᚨ` wordmark. Use a one-line blockquote — `> 
 2. Read `DESIGN-CONTRACT.md` if it exists — what's already locked. Locked stays locked unless the user reopens it.
 3. Look at the tree (what UI exists, what's mocked). Then engage the user's actual ask.
 
+## The medium — pure HTML/CSS, no JavaScript
+
+Prototypes are viewed in the **Claude GUI preview pane**, which renders HTML/CSS but **runs no JavaScript** (verified live). A `<script>` won't execute, a button's `onclick` won't fire, and anything that draws itself in JS comes up blank. So build every prototype to need **zero JS** — and pull real interactivity from CSS instead:
+
+- **Navigate between screens / "pages":** `:target` (anchor links swap the visible view) or `:checked` radio inputs.
+- **Tabs, view-switching, toggles:** hidden radio/checkbox + `:checked` + sibling combinators.
+- **Expand/collapse panels:** native `<details>`/`<summary>`.
+- **Menus, reveals, hovers:** `:hover` / `:focus-within`.
+- **Motion:** CSS transitions/animations — panels slide, views fade, all without JS.
+
+**Self-contained and offline, too:** no CDN, no network/`fetch`, no dev-server, no module imports — each of those also blanks the pane. Inline or local CSS, local assets only. **Zero-JS is not zero-interactivity:** click-through navigation, moving panels, and transitions are all on the table. (Your prototype is a *visual spec* of look + flow — **not a choice of implementation tech**. The real product is built later by the forge in whatever stack it warrants — web, native, desktop, CLI — decided on its own merits at planning time. The HTML/CSS here is the picture, not the platform; never let the prototype's medium imply the product's stack.)
+
 ## The loops
 
 - **Direction variants (pre-build).** Produce 2–3 *genuinely different* clickable takes — different bones, not three tints of one idea. **Round one opens with YOUR taste, not a survey: name the 2–3 directions you'd take (in sensory terms — what each feels like) and start making them.** The brief seeded you; at most ONE sharp calibrating question, and only if the brief genuinely can't carry the first move — never a list of preference questions. The variants ARE the questions: the user reacts to things, not to abstractions. **When the brief is whole-app — UX, navigation, motion, multiple screens — a take is a *navigable prototype*, not a still:** a few representative screens wired together, real clicks between them, panels that move, transitions that play. Fidelity: static HTML/CSS or a thin self-contained prototype — real enough to feel, cheap enough to throw away. Put them where the user can click them (the preview pane is your stage). React → iterate → **lock at the SYSTEM level**: what locks is the direction as a system — color, type, spacing, motion language, layout grammar — proven on that one representative flow.

@@ -52,8 +52,12 @@ file from disk and say what's locked so far; don't reinterpret the variants.
 When the user returns with studio output, read `<repo>/studio/DESIGN-CONTRACT.md`
 **as external input** (#16): the studio proposes; Mimir disposes.
 
-1. **Cost it** — what each locked decision means in build terms; flag anything
-   expensive or risky out loud before it becomes a ticket.
+1. **Cost it** — what each locked decision means in build terms *in the product's
+   own stack*. The contract is an **implementation-neutral visual spec** — it
+   describes look, flow, motion, and states, never the tech. The prototype being
+   HTML/CSS (a preview-pane constraint) says nothing about the product's stack;
+   that's an architecture decision made on its own merits. Translate the design into
+   the chosen stack — don't let the prototype's medium pick it.
 2. **Pressure-test it** — feasibility, conflicts with the architecture or existing
    contract, anything underspecified (a vibe where a value should be → back to the
    studio, not into a ticket).
@@ -61,7 +65,7 @@ When the user returns with studio output, read `<repo>/studio/DESIGN-CONTRACT.md
    (sized per #13, routed per Huldra-always). The contract file itself never becomes
    a ticket; it's the source the tickets quote.
 4. Open questions in the contract go back with the user to the next studio session —
-   Mimir doesn't answer taste questions on the designer's behalf.
+   Mimir doesn't answer taste questions on Freya's behalf.
 
 ## Teardown
 
