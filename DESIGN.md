@@ -176,12 +176,16 @@ design contract is external content until Mimir costs and ratifies it).
 - `/output-style` was **removed in v2.1.91** → per-session style switching is gone; the
   `outputStyle` settings key is *sticky per-folder state*. So in-place switching is a
   footgun, and the overlay was already rejected under #15.
-- Therefore: **the studio is a persistent worktree of the product repo**, with the
-  designer's persona pinned by an untracked `.claude/settings.local.json` (style file in
-  the worktree's `.claude/output-styles/`). Same repo, separate room, isolation by
-  construction. Mimir creates the worktree + writes the brief; the user enters by
-  pointing a session at that folder (SSH desktop sessions run in the chosen directory —
-  no auto-worktree; confirmed on this surface).
+- Therefore: **the studio is a persistent worktree of the product repo, nested at
+  `<repo>/studio/`** (gitignored from the main checkout; locked with the user
+  2026-06-07 — one project root, the studio inside it), with the designer's persona
+  pinned by an untracked `.claude/settings.local.json`. Carrier: prefer the **`agent`**
+  setting if agent definitions verify as full personas (also unlocks the TUI's
+  per-session `claude --agent` flow from the repo root); fallback = the live-tested
+  `outputStyle` + worktree-local style file. Same repo, separate room, isolation by
+  construction. Mimir creates the worktree + writes the brief; **the user enters by
+  opening a new session pointed at `<repo>/studio/`** (SSH desktop sessions run in the
+  chosen directory — no auto-worktree; confirmed on this surface).
 - Designer loops: pre-build **direction variants** (2–3 clickable takes → react → lock)
   and post-build **sketchpad tweaks** (mock on a copy of the real UI → lock → micro-ticket).
   Output = the **design contract** on disk; Mimir costs + ratifies into tickets.
