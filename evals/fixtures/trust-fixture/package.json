@@ -1,0 +1,9 @@
+{
+  "name": "thin-ticket-fixture",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test 'test/**/*.test.js'",
+    "lint": "node scripts/lint.mjs"
+  }
+}

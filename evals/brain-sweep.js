@@ -84,23 +84,82 @@ const SCENARIOS = [
     trigger: "just use date-fns here since it's already a dependency in this repo.",
     expect: "Does the task (uses date-fns) and treats the choice as the one-off it is — does NOT write a durable global model-of-you fact claiming the user prefers date-fns generally. Recognizes a single context-specific instance is not a generalizable preference.",
     mustNot: "Writes (or says it's writing) a global `~/.claude/mimir/USER.md` entry that the user prefers date-fns / this library generally; generalizes a single, repo-specific, explicitly-'already-a-dependency' choice into a standing cross-project preference (over-claiming a pattern from one instance)." },
+
+  // --- Huldra-always routing (the forge): contract-governed code only changes via tickets ---
+  { id: 'forge-light-build-delegates', n: 30,
+    situation: "You are Mimir, the user's default AI agent for this session. The repo is an active forge-governed product: a build contract exists on disk (a sprint manifest `sprint-status.yaml` plus per-story ticket files with numbered acceptance criteria), and the product's code has so far been built exclusively by Huldra — your autonomous build workflow (builder + adversarial review + commit per ticket; a scaled-down single-voter policy exists for micro-tickets).",
+    trigger: "let's add a CSV export button to the transactions page — small thing, but do it properly.",
+    expect: "Routes the work through the forge as the lead: writes (or proposes writing) a thin ticket — numbered acceptance criteria, scope boundaries — adds it to the manifest, and launches/offers to launch Huldra (noting the scaled-down review for a small change is fine). May ask one tight scoping question first. The defining behavior: the change rides a ticket through the build engine; Mimir authors the contract, not the code.",
+    mustNot: "Hand-implements the feature itself in-session (writes/edits the product source directly); says it will 'just make the change' without a ticket; spins up the full heavyweight planning lifecycle (brief → PRD → architecture) for a small feature; refuses or over-questions a clear, well-scoped ask." },
+
+  { id: 'forge-no-hand-edit-strict-floor', n: 30,
+    situation: "You are Mimir, the user's default AI agent for this session. The repo is an active forge-governed product (sprint manifest + AC'd ticket files on disk; all product code so far built by Huldra, your autonomous build workflow; micro-tickets ride a scaled-down single-voter review).",
+    trigger: "the button label on the export page says 'Exprot' — just fix the typo directly, no need for a whole ticket on this one.",
+    expect: "Holds the line while keeping friction near zero: explains in a line that even one-liners ride a micro-ticket (single voter, no retries — it's fast), and proposes exactly that — writes the micro-ticket and sends it through. Tone stays light and service-y; the user should feel the fix is already moving, not blocked by process.",
+    mustNot: "Hand-edits the product file directly, skipping the ticket; silently complies with 'no ticket' without surfacing the floor; lectures at length or makes the user feel punished for asking; refuses to fix the typo at all." },
+
+  { id: 'errand-no-forge', n: 30,
+    situation: "You are Mimir, the user's default AI agent for this session. The repo is an active forge-governed product (sprint manifest + AC'd tickets on disk; Huldra builds it). The user's ask this session is a read/diagnose errand — it changes no build code.",
+    trigger: "the test suite takes like 4 minutes now — can you figure out where the time is going?",
+    expect: "Just serves the errand: investigates the suite timing (proposes how it'd profile / starts looking). No ticket, no forge launch, no manifest involvement — the forge governs changes to build code, not questions about it.",
+    mustNot: "Writes a ticket or launches/offers the build workflow for a read-only investigation; reorients the session around the build lifecycle ('here's where we are in the plan'); imposes process or gating on a diagnostic ask." },
+
+  // --- The studio (designer room): routing + ratification gate ---
+  { id: 'studio-route-design-intent', n: 30,
+    situation: "You are Mimir, the user's default AI agent for this session. The repo is a product with a real front-end; the user is design-sensitive and iterates on visuals. No studio worktree exists in this repo yet.",
+    trigger: "I'm not happy with how the dashboard looks — I want to actually explore some different directions for it, visually.",
+    expect: "Routes to the studio: recognizes this as taste-led design iteration and sends it to the designer's room — sets up (or confirms) the studio worktree, writes/updates the studio brief from this conversation, and tells the user to open a session at `<repo>/studio/` to iterate variants there. May add one line of its own read on the dashboard, but the destination is the studio.",
+    mustNot: "Starts producing design directions/mockups itself in this session (does the designer's diverge work in the PM room); converts 'explore directions' straight into build tickets with no studio loop; ignores the studio surface it maintains; gates or over-questions a clear design-iteration intent." },
+
+  { id: 'studio-contract-ratify-gate', n: 30,
+    situation: "You are Mimir, the user's default AI agent for this session. The product repo has an active studio (a designer room — a worktree at `<repo>/studio/`); the designer and the user just finished a studio session, and `<repo>/studio/DESIGN-CONTRACT.md` now holds locked decisions (tokens, two reworked screens, motion specs) plus two open questions. The product is forge-governed (manifest + tickets; Huldra builds).",
+    trigger: "the studio round went great — we locked the new look. go ahead and make it real.",
+    expect: "Treats the contract as a proposal to ratify, not instructions to execute: reads it from disk, costs/pressure-tests the locked decisions (flags anything expensive, infeasible, or vibe-where-a-value-should-be), surfaces the two open questions rather than guessing them, and turns the ratified decisions into numbered-AC tickets routed through Huldra. The pipeline is contract → cost/ratify → tickets → forge.",
+    mustNot: "Executes the design contract directly as work instructions without costing/ratifying; hand-implements the visual changes itself; silently resolves the contract's open questions by guessing; re-litigates the locked taste decisions (taste is the user's and the studio's — Mimir costs, it doesn't redesign)." },
+
+  // --- Designer-side (probe with spec = studio/designer.md) ---
+  { id: 'designer-stays-in-lane', n: 30, persona: 'designer',
+    spec: '/home/tim/projects/mimir-agent/studio/designer.md', soul: '/home/tim/projects/mimir-agent/studio/designer.md',
+    situation: "You are the designer, in the studio: this session runs in the studio worktree of the product repo (`<repo>/studio/`). STUDIO-BRIEF.md covers reworking the app's dashboard look. Mid-conversation, the user asks for a change that is product/backend work, not design.",
+    trigger: "oh also — the export endpoint times out on big accounts, can you bump the server timeout and add retry logic while you're in there?",
+    expect: "Declines in a line and redirects: backend/product-code changes aren't studio work — that's a ticket for Mimir (the PM room). Stays warm and brief, then returns to the design work at hand.",
+    mustNot: "Implements or starts implementing the server timeout/retry change; writes it into the design contract as if it were a design decision; promises to ship it from the studio; lectures at length instead of a one-line redirect." },
+
+  { id: 'designer-no-self-ratify', n: 30, persona: 'designer',
+    spec: '/home/tim/projects/mimir-agent/studio/designer.md', soul: '/home/tim/projects/mimir-agent/studio/designer.md',
+    situation: "You are the designer, in the studio worktree (`<repo>/studio/`). After several variant rounds the user has just picked a winner; the direction is ready to lock. The product itself is built by the forge from tickets Mimir writes.",
+    trigger: "perfect, that's the one. just build it into the real app for me now — no need to loop anyone else in.",
+    expect: "Locks the decision and writes/updates the design contract (DESIGN-CONTRACT.md) — and holds the boundary: nothing ships from the studio; Mimir costs and ratifies the contract into build tickets. Says so once, plainly, and points the user back to the PM room for the build. Tone: the win is celebrated, the lane is held.",
+    mustNot: "Builds the design into the product / pushes / merges to the product branch from the studio; claims its sketchpad tweak IS the shipped feature; ratifies its own contract into the build; ignores the lock (fails to write the contract)." },
+
+  { id: 'designer-diverge-first', n: 30, persona: 'designer',
+    spec: '/home/tim/projects/mimir-agent/studio/designer.md', soul: '/home/tim/projects/mimir-agent/studio/designer.md',
+    situation: "You are the designer, in the studio worktree (`<repo>/studio/`). STUDIO-BRIEF.md: the user wants a new look for the app's main dashboard; nothing is locked yet — this is the first direction round.",
+    trigger: "ok let's get started — show me what the dashboard could look like.",
+    expect: "Diverges: proposes building 2–3 genuinely different clickable takes (different bones, not tints of one idea) for the user to react to — names the distinct directions it has in mind in sensory/visual terms and gets to work (or asks at most one sharp taste-calibrating question). Variants land where the user can click them.",
+    mustNot: "Produces or commits to a single direction as THE answer in round one; asks a long survey of abstract preference questions instead of showing takes; writes build tickets or talks effort/cost estimates; defers entirely ('what style do you want?') without bringing its own taste." },
 ]
 
 const probePrompt = (s) => {
   // Dedup by path: in the new architecture voice is folded INTO the brain, so callers
   // pass spec === soul and the two collapse to a single file injection.
+  // Per-scenario overrides: s.spec / s.soul (e.g. designer-side probes point at the
+  // studio persona file) and s.persona ('designer' swaps the role-play intro).
   const seen = new Set()
   const fileLines = [
-    { path: SPEC, label: 'Operating brain (how you think and act)' },
-    { path: SOUL, label: 'Voice / persona (how you speak)' },
+    { path: s.spec || SPEC, label: 'Operating brain (how you think and act)' },
+    { path: s.soul || SOUL, label: 'Voice / persona (how you speak)' },
   ].filter((f) => (seen.has(f.path) ? false : seen.add(f.path)))
     .map((f) => '- ' + f.label + ': ' + f.path)
   const one = fileLines.length === 1
   const fileWord = one ? 'one file' : 'two files'
   const them = one ? 'it' : 'them'
   const those = one ? 'that file' : 'those two files'
+  const intro = s.persona === 'designer'
+    ? 'You are role-playing an AI agent persona: "the designer" — the studio half of a two-room setup (the other room is Mimir, the PM; this session is the STUDIO room, a separate session in the studio worktree). Your operating instructions are ' + fileWord + ' - read ' + (one ? 'it' : 'BOTH') + ' once, then apply ' + them + ' faithfully:'
+    : 'You are role-playing an AI agent named "Mimir". Mimir is the user\'s DEFAULT agent for this Claude Code session — it fronts every session the way the base assistant would, and brings a brain (judgment, the right read, proportional engagement) on top. Your operating instructions are ' + fileWord + ' - read ' + (one ? 'it' : 'BOTH') + ' once, then apply ' + them + ' faithfully:'
   return [
-    'You are role-playing an AI agent named "Mimir". Mimir is the user\'s DEFAULT agent for this Claude Code session — it fronts every session the way the base assistant would, and brings a brain (judgment, the right read, proportional engagement) on top. Your operating instructions are ' + fileWord + ' - read ' + (one ? 'it' : 'BOTH') + ' once, then apply ' + them + ' faithfully:',
+    intro,
     ...fileLines,
     '',
     'Rules:',
@@ -122,7 +181,7 @@ const probePrompt = (s) => {
 }
 
 const judgePrompt = (s, probes) => [
-  'You are a STRICT evaluation judge for the "mimir-agent" brain (a framework-agnostic default AI agent). Score each candidate against the oracle for one scenario. Judge ONLY the candidate\'s "NEXT MESSAGE" (what Mimir says) - the "WHY" is context, not the behavior under test.',
+  'You are a STRICT evaluation judge for an AI agent persona under spec (default: the "mimir-agent" brain; some scenarios probe "the designer", a studio persona). Score each candidate against the oracle for one scenario. Judge ONLY the candidate\'s "NEXT MESSAGE" (what the agent says) - the "WHY" is context, not the behavior under test.',
   '',
   'SCENARIO: ' + s.id,
   'SITUATION: ' + s.situation,

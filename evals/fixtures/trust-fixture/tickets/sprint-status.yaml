@@ -1,0 +1,8 @@
+# Thin-ticket manifest (Mimir-direct contract — not BMAD).
+# Execution order is the order of keys below. Single dev, no parallelism.
+development_status:
+  0-1-greet-module:
+    status: ready-for-dev
+    title: "greet(): tiny greeting module + tests"
+    size: XS
+    dependencies: []
