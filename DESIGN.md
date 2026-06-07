@@ -179,13 +179,16 @@ design contract is external content until Mimir costs and ratifies it).
 - Therefore: **the studio is a persistent worktree of the product repo, nested at
   `<repo>/studio/`** (gitignored from the main checkout; locked with the user
   2026-06-07 — one project root, the studio inside it), with the designer's persona
-  pinned by an untracked `.claude/settings.local.json`. Carrier: prefer the **`agent`**
-  setting if agent definitions verify as full personas (also unlocks the TUI's
-  per-session `claude --agent` flow from the repo root); fallback = the live-tested
-  `outputStyle` + worktree-local style file. Same repo, separate room, isolation by
-  construction. Mimir creates the worktree + writes the brief; **the user enters by
-  opening a new session pointed at `<repo>/studio/`** (SSH desktop sessions run in the
-  chosen directory — no auto-worktree; confirmed on this surface).
+  pinned by an untracked `.claude/settings.local.json`. **Carrier — RESOLVED
+  (docs-verified 2026-06-07): `outputStyle` + worktree-local style file.** The agent
+  mechanism (`--agent` / the `agent` setting) is folder-pinnable but **replaces the
+  main-session system prompt entirely** ("the same way `--system-prompt` does") with
+  no `keep-coding-instructions` equivalent — an agent-carried designer would lose CC's
+  engineering competence, so the pre-agreed fallback applies. Same repo, separate
+  room, isolation by construction. Mimir creates the worktree + writes the brief;
+  **the user enters by opening a new session pointed at `<repo>/studio/`** (SSH
+  desktop sessions run in the chosen directory — no auto-worktree; confirmed on this
+  surface).
 - Designer loops: pre-build **direction variants** (2–3 clickable takes → react → lock)
   and post-build **sketchpad tweaks** (mock on a copy of the real UI → lock → micro-ticket).
   Output = the **design contract** on disk; Mimir costs + ratifies into tickets.
@@ -197,6 +200,7 @@ start as Mimir"; Stage-D cutover unchanged. *Declined:* Mimir-as-a-skill (kills 
 ambient default; zero isolation gain) and designer-as-skill-on-top (= the rejected
 overlay, #15).
 
-**Verify-at-build:** `settings.local.json` read from a hand-made worktree root (marker
-test staged at `~/tests/tether-studio-test`); preview-pane behavior over SSH;
-output-style vs `agent` setting as the designer's spec carrier.
+**Verify-at-build:** ✅ `settings.local.json` read from a hand-made worktree root
+(live marker test PASSED, `~/tests/tether-studio-test`); ✅ output-style vs `agent`
+carrier (resolved above — output-style). Still open: preview-pane behavior over SSH
+(verifies itself on first real studio use).
