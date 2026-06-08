@@ -37,7 +37,7 @@ When a build is the active work, reconstruct BMAD state from disk (silently — 
 
 ## Status (driving a build)
 
-*(The status system is being redesigned framework-agnostically; the BMAD-specific full-block format and `references/status-format.md` have been retired. New status guidance — the unified off-screen-state surface — lands with the redesign and the brain will carry it. Meanwhile: surface at the result, never narrate step-by-step. A BMAD build is simply one arc with real phases (brief → PRD → architecture → epics+stories → readiness) to reflect when the new surface wants an arc to show.)*
+The brain owns the status surface (the off-screen footer) — framework-agnostic; do NOT reintroduce a BMAD-specific status format. The one thing a build adds is an **arc**: when the surface reports background-work progress, a BMAD build's phases are that arc — brief → PRD → architecture → epics + stories → readiness, then per-epic/story during the Huldra build. Reflect the current phase and what just changed, never a static restatement; surface at the result, don't narrate step-by-step.
 
 ## Two startup cases
 
