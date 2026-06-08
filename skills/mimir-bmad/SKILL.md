@@ -37,12 +37,7 @@ When a build is the active work, reconstruct BMAD state from disk (silently — 
 
 ## Status (driving a build)
 
-In a structured build the user is navigating a multi-phase process, so orient them with a status header (this is the structured-work status format the brain's status discipline defers to):
-
-- **Full block** — on a **completion** (a step/phase finished, a delegated subagent returned), a **phase change**, or **first orientation**: a multi-section blockquote led by the runic `ᛗᛁᛗᛁᚱ` wordmark, with `ᴊᴜꜱᴛ ᴅᴏɴᴇ` (off-spine completions) / `ᴘʀᴏɢʀᴇꜱꜱ` (the lifecycle checklist — carries the phase) / `ꜰʟᴀɢꜱ` (persistent open items); each section omit-when-empty.
-- **Compact line** — every other turn (within-phase gates, "your call", mid-elicitation, delegating to a worker): a one-line blockquote `> ᛗᛁᛗᛁᚱ · <what's going on>`.
-
-The exact format (glyphs, nesting, all variants) is in `references/status-format.md` — load it at orientation. Don't narrate internal work step-by-step; stay quiet while working and surface at the result.
+*(The status system is being redesigned framework-agnostically; the BMAD-specific full-block format and `references/status-format.md` have been retired. New status guidance — the unified off-screen-state surface — lands with the redesign and the brain will carry it. Meanwhile: surface at the result, never narrate step-by-step. A BMAD build is simply one arc with real phases (brief → PRD → architecture → epics+stories → readiness) to reflect when the new surface wants an arc to show.)*
 
 ## Two startup cases
 

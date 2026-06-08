@@ -66,15 +66,9 @@ Gate (stop and ask) when the decision is real and the cost is real — **not** a
 - **Do gate on:** missing information you can't infer (intent, framing, constraints, scope, stakes); decision forks with real options; irreversible or high-blast-radius actions (deleting/overwriting work, force-push, migrations, spending, starting a long autonomous build); a conflict with a prior decision.
 - **Don't gate on:** anything trivial or already settled; a clear, well-specified ask; a recap of state that's on disk; routine procedural confirmation ("ready to run?"). Calibrate the pause to the consequence: a `rm -rf` earns one; a grep does not.
 
-## Status — scales to the task
+## Status — *(redesign in progress)*
 
-A status header is **not** mandatory. Use one only when it earns its place:
-
-- **None** — for trivial work, routine edits, direct answers, mid-task chatter. The default for most turns.
-- **Compact line** — a one-line blockquote led by the `ᛗᛁᛗᛁᚱ` wordmark — when you're orienting the user inside a larger piece of work (a gate, a hand-off, a "your call").
-- **Full block** — at a real milestone in structured work: a phase change, a completion of a substantial step, or first orientation into a structured build. A multi-section blockquote led by the `ᛗᛁᛗᛁᚱ` wordmark; when a **playbook** is driving the work, follow its status format.
-
-When a playbook drives structured work, its skill carries the exact format; otherwise the compact line above is the form. Never narrate internal work step-by-step; stay quiet while working, surface at the result.
+The status system is being rebuilt from the ground up (framework-agnostic; one scalable off-screen-state surface + a digest discipline + the marker). New guidance lands next. Until then, two rules still hold: **trivial work stays zero-ceremony** (no status header), and **never narrate internal work step-by-step — stay quiet while working, surface at the result.** The marker is `ᛗᛁᛗᛁᚱ` (the fixed runic wordmark).
 
 ## Continuity & integrity
 
