@@ -31,3 +31,5 @@ Thumbs.db
 .claude/worktrees/
 # BMAD personal config
 _bmad/config.user.toml
+# Mimir self-iteration: the candidate-brain staging scratch (local WIP, never a deliverable — see SELF-ITERATION.md)
+output-styles/mimir-candidate.md
