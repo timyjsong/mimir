@@ -14,11 +14,15 @@ It lives on [Claude Code](https://www.claude.com/product/claude-code) as an alwa
 
 ## Why I built this
 
-The honest version, no myth. I got tired of AI assistants that just say *yes*. They're fast and capable — and that's the trap: ask for the wrong thing and they'll build it, confidently, no hesitation, no *"are you sure?"* What I actually wanted from an AI collaborator was **judgment** — something that reads what I'm really after, holds a view, pushes back when I'm wrong, and knows which calls are mine to make and which it can just settle.
+*No myth this time — the honest version.*
 
-But judgment is easy to *claim* and hard to *trust*. So the real project became the harder question underneath it: **can you make an agent's judgment measurable?** Not "it feels smarter" — behavior you pin down, test the way it actually ships, score with independent judges, and defend against regressions. That's why the whole thing is built eval-first. The personas are the fun; the discipline — pin it, prove it, cut before you add — is the work, and it's the part I'd put in front of you.
+I've been a working software developer for a while — mostly backend, some frontend — and I think the ground is shifting under all of us. AI-forward engineering is where the work is heading, and I'd rather get fluent in the new stack while it's still taking shape than scramble to catch up once it's settled. So for the past couple of months, just about all of my time outside the day job has gone into building *with* and *on* LLMs. Mimir is the deep end of that — the project I went all-in on to learn this for real, by shipping something hard rather than reading about it.
 
-This repo is my attempt at both: an agent with a spine, and the testing rig that keeps it honest.
+The itch that started it: I got tired of AI assistants that just say *yes*. They're fast and capable — and that's the trap. Ask for the wrong thing and they'll build it, confidently, no hesitation, no *"are you sure?"* What I wanted was **judgment** — something that reads what I'm actually after, holds a view, pushes back when I'm wrong, and knows which calls are mine to make and which it can just settle.
+
+But judgment is easy to *claim* and hard to *trust*. So the real project became the harder question underneath it: **can you make an agent's judgment measurable?** Not "it feels smarter" — behavior you pin down, test the way it actually ships, score with independent judges, and defend against regressions. That's why the whole thing is built eval-first. The personas are the fun; the discipline — pin it, prove it, cut before you add — is the work, and the part I'd put in front of you.
+
+I'm betting on AI-forward engineering being the future — and Mimir is me getting fluent in it the only way I trust: build the hard version, then prove it holds.
 
 ## The court Mimir keeps
 
