@@ -293,7 +293,20 @@ the inherited tree without touching `greet`; committed the delta only off the ba
 exercises inherited code); baseline byte-identical afterward. Verified on disk. *Brownfield/
 iterative rides the forge as-is.*
 
-**Status.** Design validated end-to-end; **implementation owed** — the cartographer (a
-the-Hand handoff + the brownfield playbook) and the §5 brain sharpening ("the read includes
-acquiring the MAP for an unfamiliar codebase, gated on intent-needs-map"). Eval-pinned first,
-per the change protocol.
+**Status — IMPLEMENTED + VALIDATED (2026-06-09).** The brownfield playbook is
+`brownfield/BROWNFIELD.md` (deployed `~/.claude/mimir/brownfield/`, mirroring the studio).
+The §5 brain sharpening turned out to be a **reachability pointer, not a disposition
+change**: the deployment-faithful baseline showed the brain *already* handles brownfield at
+every altitude — delegate a map-to-disk audit on a big inherited repo, in-session read on a
+small feature, just-do-it on a typo, honor claimed-vs-verified on a returned MAP — all
+falling out of the existing *read* + *proportionality* + *disk-is-truth* dispositions. So
+the brain got **one capability bullet** pointing at the playbook; the tagged-MAP discipline
+and the bring-under-contract rules (the non-derivable parts) live in the playbook, not the
+hot path. Eval (claude -p, K=3): 4 brownfield scenarios — heavy / moderate / trivial / align
+— **20/20 each** + 2 regression guards 10/10, unanimous, *before and after* the edit (the
+pointer added reachability with zero behavioral cost). In vivo: two read-only cartography
+audits — `countermark` (a plan, not a product → every plan-claim tagged *claimed-not-verified*,
+refused to report built) and `brand-vet` (real + tested → verified by *executing* the suite,
+held live-API claims NOT-VERIFIED, caught a stale build-ledger drift). Both honored the MAP
+shape and the epistemic spine. Cartographer rides the-Hand + the playbook with **zero forge
+change**, as designed.
