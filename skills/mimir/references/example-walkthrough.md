@@ -64,7 +64,7 @@ Mid-solutioning, Mimir needs market/domain research — bulky and autonomous. No
 
 > ᛗᛁᛗᛁᚱ · research running; I'll brief you when it lands
 
-Mimir spawns a fresh-context `bmad-worker` (per `playbooks/bmad.md`) with skill + task + user decisions verbatim. The worker runs autonomously, writes its report to disk, returns one short result:
+Mimir spawns a fresh-context worker — the Hand (`the-hand`, per `playbooks/bmad.md`) — with skill + task + user decisions verbatim. The worker runs autonomously, writes its report to disk, returns one short result:
 
 ```
 Status:   complete

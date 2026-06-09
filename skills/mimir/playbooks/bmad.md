@@ -14,7 +14,7 @@ Read this before delegating a `bmad-*` workflow to a subagent. **Only autonomous
 ## How to spawn
 
 - **`Agent` tool, fresh context, ephemeral** (no persistent name). Fresh per task — never carry a subagent across tasks (context rots).
-- Subagent type: `bmad-worker` (generic `bmad-*` runner) — see `~/.claude/agents/bmad-worker.md`. The skill self-orients from `_bmad/`; don't pre-load context.
+- Subagent type: `the-hand` (Mimir's generic fire-and-return worker) — see `~/.claude/agents/the-hand.md`. The handoff names the `bmad-*` skill; the skill self-orients from `_bmad/`, so don't pre-load context.
 - Mode: **background** for genuinely autonomous work — don't block, verify on disk on completion. **Foreground** only if it might surface a question.
 - **Model:** spawns do NOT inherit the lead's model/effort (verified). Set it explicitly if the work needs a specific model.
 

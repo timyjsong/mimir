@@ -62,6 +62,12 @@ minimal, persist decisions to disk before they age out, compact deliberately
 converge (PM) stay in separate frames — mixing weakens both. *[proven: adversarial
 framing is what made review work · field: context-isolation architecture]*
 — *Corollary: least-context workers — a role sees only what its contract requires.*
+— *Corollary (2026-06-09): a delegated worker's identity tracks its execution-contract,
+not its task. Ephemeral non-build delegation shares one faceless generic worker; per-task
+purpose lives in the handoff. A new feature adds a handoff, never a worker; a new worker is
+earned only by a genuinely new contract/mechanism (cf. #10). [proven: `bmad-worker` was a
+task-named generic — legacy bloat; BMAD skills self-orient, so it added no orientation
+value]*
 
 **10. Complexity must be earned by a real observed need, never speculated.** Governs
 the system, its patterns, and this list. *[proven: every adopted pattern has a named

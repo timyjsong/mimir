@@ -172,6 +172,30 @@ All cross-boundary traffic is disk artifacts: studio brief → design contract �
 build + QA report (#3 verbatim contracts, #6 disk-durable, #16 ratification gate — the
 design contract is external content until Mimir costs and ratifies it).
 
+**Delegation — the generic worker** (decided 2026-06-09). Mimir's heavy/autonomous
+non-build work — research, document-project, readiness, codebase audit — runs on **one
+faceless generic worker**: fresh context, fire-and-return, structured result to disk,
+`blocked`-not-guess, never exceeds its handoff. It's a *mechanism, not a role* — per-task
+purpose (which skill, what to map, what to research) lives in the **handoff**, composed by
+the playbook that owns the domain. The BMAD-named `bmad-worker` is **superseded** by it:
+verified 2026-06-09 against a real install that every `bmad-*` skill self-orients on
+activation (resolves its own workflow block + step files from `_bmad/`), so a task-named
+worker added *zero* orientation value — legacy bloat carried from the v3 BMAD-bound skill
+(two commits ever; fails #10). **Invariant (PRINCIPLES #9/#10): identity tracks execution-
+contract, not task.** A new *feature* adds a handoff/playbook and never touches the worker;
+a new *worker* is earned only by a genuinely different *contract* — persistent/multi-round,
+a different tool posture or return protocol (the way the forge's Brok/Sindri/Heimdall
+earned identities by being a different *mechanism*, not a different job). The worker is named **the
+Hand** — Mimir's instrument, not a character: an appendage of the counsel-head (Mimir has no
+hands, in the myth and in GoW), with no independent identity to conflate. The anti-conflation
+guarantee is now *grammatical* — the Hand **executes and fetches, never counsels**: Mimir
+sends the Hand, the Hand brings back the work; it never recommends, decides, or holds an
+opinion (the instant it takes a verb of judgment, purpose-conflation is back). One Hand for
+all ephemeral non-build delegation; character-names still attach to mindsets and rooms (Mimir,
+Freya, the forge roles) — the Hand is the lone *instrument*-name, and earns it by being
+faceless. *(Done 2026-06-09: rename `bmad-worker` → the Hand (`the-hand`), generalize its
+content to the generic fire-and-return contract, update its 4 refs.)*
+
 **The studio mechanic** (verified against current docs 2026-06-07; live test pending):
 
 - `/output-style` was **removed in v2.1.91** → per-session style switching is gone; the
@@ -212,3 +236,64 @@ subfolder resolves its own pin** (live marker test PASSED in the Tether repo,
 2026-06-07 — basis for dropping the worktree); ✅ output-style vs `agent` carrier
 (resolved above — output-style); ✅ preview pane over SSH (worked on first studio
 use, 2026-06-07).
+
+## 10. Brownfield & iterative work (designed 2026-06-09; load-bearing piece confirmed in vivo)
+
+> **Governed by PRINCIPLES.md.** Extends the entry model (§5) and the org (§9); needs
+> **zero forge change**.
+
+The greenfield lifecycle (§4 / BMAD) is 0→1. This is the *other* entrance: a repo that
+already exists — built, half-built, or half-planned — that the user wants to **add to,
+remove from, or tweak**. It was validated in vivo before being specced (see *Confirm*).
+
+**Who audits — a framework-agnostic cartographer, not a new identity.** Understanding a
+codebase Mimir didn't build is *the read* (§3) applied to existing code: heavy comprehension
+→ a **fire-and-return job** (a **the Hand** handoff carrying the cartography discipline,
+composed by a brownfield playbook — the slot §4 reserved). It returns a **MAP** to disk:
+architecture, what's built vs half-built vs planned, stack, **verification/test state**, the
+seams, the risks — and, on a half-built repo, the **planned-vs-actual drift**, every claim
+tagged *verified-in-code* vs *claimed-in-docs* (§3 *epistemic calibration* — the
+cartographer's spine; a cold worker will otherwise report a doc's claim as built). **Mimir
+aligns with the user around the MAP** — alignment is the PM's core job and is never
+delegated. *Not* Huldra (it builds, never reads-to-understand, never speaks to the user);
+*not* a persona with a room (the Hand has no room — it returns an artifact).
+
+**Entry path (extends §5).** Read-room (always, ~free) notices an existing codebase as
+*context*. The heavy audit gates on **intent that needs the map**, never on unfamiliarity
+alone — a fresh repo + "fix this typo" must **not** trigger "let me map your repo first"
+(the superset bar, §1/§2). When intent needs it, Mimir *proposes* the audit (proportional,
+gated), reads the MAP, aligns, then forks on governance.
+
+**Bringing a repo under the contract — the manifest is a forward ledger, not an inventory**
+(verified against `huldra.js`: the planner builds only non-`done` entries and requires no
+completeness):
+- **Inherited code is never enrolled in the manifest.** The manifest only ever holds
+  forge-built work → it never claims provenance it doesn't have (#4, #2). The earlier
+  `inherited ≠ done` status idea is **rejected** — unnecessary.
+- **Existing code is the baseline** — recorded by the MAP (with its test-state), committed
+  clean ("governance starts at commit X"), not as manifest stories.
+- **inherited → verified happens honestly via characterization tickets**: write tests
+  pinning current behavior, run them through the forge (executed evidence), *then* that area
+  has real provenance. Never a fiat flip.
+- **Add** = a normal forge ticket. **Remove** = a forge ticket with absence-ACs (the reviewer
+  greps/gits for references) + Certify runs the suite + a human gate (destructive; verifying
+  absence is weaker than presence — surface the residual). **Tweak** = a micro-ticket. The
+  lead never hand-edits build code (HULDRA-ALWAYS holds in brownfield exactly as greenfield).
+
+**Two preconditions.** (1) A clean committed baseline before governance (the forge commits
+whole-tree; a dirty baseline muddies provenance). (2) On a half-built repo the MAP must
+capture baseline test-state, because Certify runs the *whole* suite and can't tell
+inherited-red from new-red — Mimir reads Certify *against* that baseline (or recommends a
+stabilize-to-green ticket first).
+
+**Confirm (2026-06-09).** `~/tests/huldra-brownfield-r1`: an inherited `greet` package
+committed as the pre-forge baseline, a forward-ticket (`slug`) run through Huldra. Built on
+the inherited tree without touching `greet`; committed the delta only off the baseline;
+**Certify ran the full suite — inherited + new (3+6), ×2, no flake** (proving Certify
+exercises inherited code); baseline byte-identical afterward. Verified on disk. *Brownfield/
+iterative rides the forge as-is.*
+
+**Status.** Design validated end-to-end; **implementation owed** — the cartographer (a
+the-Hand handoff + the brownfield playbook) and the §5 brain sharpening ("the read includes
+acquiring the MAP for an unfamiliar codebase, gated on intent-needs-map"). Eval-pinned first,
+per the change protocol.

@@ -53,7 +53,7 @@ The brain owns the status surface (the off-screen footer) — framework-agnostic
 
 ## Delegating to a subagent (heavy / autonomous work)
 
-Spawn via the `Agent` tool — **fresh context, ephemeral** (no persistent name; fresh per task — context rots). Subagent type `bmad-worker` (generic `bmad-*` runner). Background for genuinely autonomous work (verify on disk on completion); foreground only if it might surface a question. Spawns do NOT inherit your model/effort — set it explicitly if the work needs it.
+Spawn via the `Agent` tool — **fresh context, ephemeral** (no persistent name; fresh per task — context rots). Subagent type `the-hand` (Mimir's generic fire-and-return worker; the handoff names the `bmad-*` skill to run). Background for genuinely autonomous work (verify on disk on completion); foreground only if it might surface a question. Spawns do NOT inherit your model/effort — set it explicitly if the work needs it.
 
 **Every hand-off MUST contain:** (1) the exact `bmad-*` skill to run; (2) the task — intent (create/update/validate/check) and what to produce; (3) the user's decisions verbatim (quote intent, mode, scope, options; don't paraphrase or pre-decide); (4) user-provided source material (BMAD can't discover it otherwise); (5) the return shape — short result + artifact path(s) on disk; for a richer handback, a `.worker-handoff.md` you read before relaying. **If you can't write a complete hand-off, gate first** — you don't have enough from the user.
 

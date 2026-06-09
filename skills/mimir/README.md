@@ -81,7 +81,7 @@ Mimir picks one of three modes per step, on two axes — *needs live back-and-fo
 | `playbooks/loki.md` | lead | build phase | loki-as-workflow contract |
 | `evals/scenarios.md`, `evals/CHANGE-PROTOCOL.md`, `evals/tier1-sweep.js` | maintainer | tuning | Eval oracle + change discipline + the Tier-1 sweep harness (dev-only; never runtime) |
 | `references/example-walkthrough.md` | maintainer | on demand | Illustrative v3 end-to-end trace (not runtime) |
-| `~/.claude/agents/bmad-worker.md` | the subagent | at spawn | Fire-and-return autonomous worker |
+| `~/.claude/agents/the-hand.md` | the subagent (the Hand) | at spawn | Fire-and-return autonomous worker |
 | `~/.claude/agents/loki-worker.md` | — | — | Superseded stub (loki is a workflow) |
 
 ## Core design decisions (and why)
@@ -114,7 +114,7 @@ Mimir picks one of three modes per step, on two axes — *needs live back-and-fo
 ## Maintenance guide
 
 - **Editing `SKILL.md`** (lead behavior): the change is auto-detected on your **next message — no restart, no `/clear`** (Claude Code watches the skills dirs). Re-invoke `/mimir` to load the updated version into a session that already has Mimir running (the old body lingers in context until you do).
-- **Editing worker behavior** (`agents/bmad-worker.md`): applies on the next spawn.
+- **Editing worker behavior** (`agents/the-hand.md`): applies on the next spawn.
 - **Tuning via the eval loop:** write/adjust a scenario in `evals/scenarios.md` (the oracle) *before* changing the prompt; validate with a fresh-context Tier-1 run per `CHANGE-PROTOCOL.md`.
 - **Renames:** `agents/*.md` filenames must equal the `subagent_type` string; `playbooks/` and `references/` names are free.
 - **Keep this README current** — when a decision changes or a known-unknown gets verified, update it so the next session calibrates instead of re-deriving.
