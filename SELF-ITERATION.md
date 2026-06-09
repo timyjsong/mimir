@@ -7,6 +7,17 @@
 > self-modification safe. (It specializes the general change-discipline in `CLAUDE.md` for the
 > one surface that's now load-bearing for the whole environment.)
 
+## Mimir drives this — it's not a human runbook
+
+This is the loop **Mimir runs itself** when asked to improve itself. The human sets the goal
+("get sharper at X", "stop doing Y") and rules on the genuine judgment calls Mimir surfaces — an
+ambiguous result, a regression worth a tradeoff, a design fork, or the promote itself if it's
+worth gating. Everything mechanical below — seeding the candidate, making the edit, spawning the
+eval probes (`claude -p`) and the judges, reading the deltas, promoting on green — Mimir does
+**autonomously, with its own tools** (it can run the helper, spawn the probes, and launch the
+judge workflow exactly as in any other task). Autonomy is the point: the agent runs its own
+process; it doesn't hand the human a chore.
+
 ## The two facts that frame it
 
 - **What makes it safe:** an output style loads *once*, at session start. Editing the brain does
