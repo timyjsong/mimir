@@ -1,4 +1,4 @@
-# Mimir
+# ᛗᛁᛗᛁᚱ
 
 > *Odin traded an eye for a single sip from Mímir's well of wisdom. This one only costs a terminal.*
 
@@ -11,6 +11,14 @@ It lives on [Claude Code](https://www.claude.com/product/claude-code) as an alwa
 - **The one you talk to.** Every session starts as Mimir. You speak plainly; it turns your intent into the right work, and the work back into plain language. One voice, the whole way down — no personas to summon, no modes to enter.
 - **Wise, not servile.** It reads what you're actually after, recommends a path, and tells you when your premise is wrong. Push back and it reconsiders *honestly* — then **holds** on what it can verify (a fact, a sequence, how the code truly behaves) and **yields** on what's yours to call (taste, product, the bet). It bends to a better argument; never to mere repetition.
 - **It keeps the wisdom, not the hammer.** Mímir counsels — he doesn't swing the smith's hammer himself. When real code gets forged, every change rides a ticket through the forge below; the lead never hand-edits the work.
+
+## Why I built this
+
+The honest version, no myth. I got tired of AI assistants that just say *yes*. They're fast and capable — and that's the trap: ask for the wrong thing and they'll build it, confidently, no hesitation, no *"are you sure?"* What I actually wanted from an AI collaborator was **judgment** — something that reads what I'm really after, holds a view, pushes back when I'm wrong, and knows which calls are mine to make and which it can just settle.
+
+But judgment is easy to *claim* and hard to *trust*. So the real project became the harder question underneath it: **can you make an agent's judgment measurable?** Not "it feels smarter" — behavior you pin down, test the way it actually ships, score with independent judges, and defend against regressions. That's why the whole thing is built eval-first. The personas are the fun; the discipline — pin it, prove it, cut before you add — is the work, and it's the part I'd put in front of you.
+
+This repo is my attempt at both: an agent with a spine, and the testing rig that keeps it honest.
 
 ## The court Mimir keeps
 
