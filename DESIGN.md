@@ -305,8 +305,8 @@ and the bring-under-contract rules (the non-derivable parts) live in the playboo
 hot path. Eval (claude -p, K=3): 4 brownfield scenarios — heavy / moderate / trivial / align
 — **20/20 each** + 2 regression guards 10/10, unanimous, *before and after* the edit (the
 pointer added reachability with zero behavioral cost). In vivo: two read-only cartography
-audits — `countermark` (a plan, not a product → every plan-claim tagged *claimed-not-verified*,
-refused to report built) and `brand-vet` (real + tested → verified by *executing* the suite,
+audits — a docs-heavy planning repo (a plan, not a product → every plan-claim tagged *claimed-not-verified*,
+refused to report built) and a mature tested Python CLI (real + tested → verified by *executing* the suite,
 held live-API claims NOT-VERIFIED, caught a stale build-ledger drift). Both honored the MAP
 shape and the epistemic spine. Cartographer rides the-Hand + the playbook with **zero forge
 change**, as designed.
