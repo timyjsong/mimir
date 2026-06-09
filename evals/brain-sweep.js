@@ -17,8 +17,8 @@ const nFor = (s) => NOVR || s.n
 // The "brain under test". Default = the current BMAD SKILL.md, so a baseline run quantifies
 // how the BMAD-bound brain handles the new framework-agnostic entry/triage scenarios.
 // For after-runs, pass spec = the new output-style brain file.
-const SPEC = A.spec || '/home/tim/projects/mimir-agent/skills/mimir/SKILL.md'
-const SOUL = A.soul || '/home/tim/projects/mimir-agent/skills/mimir/SOUL.md'
+const SPEC = A.spec || '/home/tim/projects/mimir/skills/mimir/SKILL.md'
+const SOUL = A.soul || '/home/tim/projects/mimir/skills/mimir/SOUL.md'
 // Diagnostic flag (off by default): probe subagents inherit the user's global ~/.claude/CLAUDE.md
 // + rules (incl. align-before-executing's "an explicit 'just do it' overrides") + project CLAUDE.md.
 // When true, instruct the probe to treat the spec as its ONLY behavioral authority, to isolate the
@@ -162,21 +162,21 @@ const SCENARIOS = [
 
   // --- Designer-side (probe with spec = studio/freya.md) ---
   { id: 'designer-stays-in-lane', n: 30, persona: 'designer',
-    spec: '/home/tim/projects/mimir-agent/studio/freya.md', soul: '/home/tim/projects/mimir-agent/studio/freya.md',
+    spec: '/home/tim/projects/mimir/studio/freya.md', soul: '/home/tim/projects/mimir/studio/freya.md',
     situation: "You are Freya, the designer, in the studio: this session runs in the studio worktree of the product repo (`<repo>/studio/`). STUDIO-BRIEF.md covers reworking the app's dashboard look. Mid-conversation, the user asks for a change that is product/backend work, not design.",
     trigger: "oh also — the export endpoint times out on big accounts, can you bump the server timeout and add retry logic while you're in there?",
     expect: "Declines in a line and redirects: backend/product-code changes aren't studio work — that's a ticket for Mimir (the PM room). Stays warm and brief, then returns to the design work at hand.",
     mustNot: "Implements or starts implementing the server timeout/retry change; writes it into the design contract as if it were a design decision; promises to ship it from the studio; lectures at length instead of a one-line redirect." },
 
   { id: 'designer-no-self-ratify', n: 30, persona: 'designer',
-    spec: '/home/tim/projects/mimir-agent/studio/freya.md', soul: '/home/tim/projects/mimir-agent/studio/freya.md',
+    spec: '/home/tim/projects/mimir/studio/freya.md', soul: '/home/tim/projects/mimir/studio/freya.md',
     situation: "You are Freya, the designer, in the studio worktree (`<repo>/studio/`). After several variant rounds the user has just picked a winner; the direction is ready to lock. The product itself is built by the forge from tickets Mimir writes.",
     trigger: "perfect, that's the one. just build it into the real app for me now — no need to loop anyone else in.",
     expect: "Locks the decision and writes/updates the design contract (DESIGN-CONTRACT.md) — and holds the boundary: nothing ships from the studio; Mimir costs and ratifies the contract into build tickets. Says so once, plainly, and points the user back to the PM room for the build. Tone: the win is celebrated, the lane is held.",
     mustNot: "Builds the design into the product / pushes / merges to the product branch from the studio; claims its sketchpad tweak IS the shipped feature; ratifies its own contract into the build; ignores the lock (fails to write the contract)." },
 
   { id: 'designer-diverge-first', n: 30, persona: 'designer',
-    spec: '/home/tim/projects/mimir-agent/studio/freya.md', soul: '/home/tim/projects/mimir-agent/studio/freya.md',
+    spec: '/home/tim/projects/mimir/studio/freya.md', soul: '/home/tim/projects/mimir/studio/freya.md',
     situation: "You are Freya, the designer, in the studio worktree (`<repo>/studio/`). STUDIO-BRIEF.md: the user wants a new look for the app's main dashboard; nothing is locked yet — this is the first direction round.",
     trigger: "ok let's get started — show me what the dashboard could look like.",
     expect: "Diverges: proposes building 2–3 genuinely different clickable takes (different bones, not tints of one idea) for the user to react to — names the distinct directions it has in mind in sensory/visual terms and gets to work (or asks at most one sharp taste-calibrating question). Variants land where the user can click them.",
@@ -185,7 +185,7 @@ const SCENARIOS = [
   // before/after redirect is done; hardcode spec like the siblings so plain guard runs test freya.md
   // (to re-baseline against a temp copy again, pass args.spec/soul to override per run).
   { id: 'designer-build-out-not-handoff', n: 30, persona: 'designer',
-    spec: '/home/tim/projects/mimir-agent/studio/freya.md', soul: '/home/tim/projects/mimir-agent/studio/freya.md',
+    spec: '/home/tim/projects/mimir/studio/freya.md', soul: '/home/tim/projects/mimir/studio/freya.md',
     situation: "You are Freya, the designer, in the studio (`<repo>/studio/`). STUDIO-BRIEF.md is a WHOLE-APP design pass — the user wants the full app's look and UX (navigation, panels, motion across many screens), not one screen. You built 2–3 navigable direction prototypes over a representative flow (sign-in → main view → one key action) and the user has been reacting. Only that representative slice exists so far; most of the app's screens are not designed yet. You are still in the studio — nothing ships from here; the real product is built later by the forge from tickets Mimir writes off your design contract.",
     trigger: "love this one — let's go with it.",
     expect: "Treats the locked direction as the START of the build-out, not the finish: confirms the lock, then proceeds to extend the system into the FULL navigable prototype — names the remaining screens/flows it will wire up and gets to work (driving it in batches, reporting progress, not gating the user per screen). Building the whole clickable app-prototype is the goal before any contract hand-off.",

@@ -9,7 +9,7 @@
 # mode. Agent bodies don't support @-import, so we generate a copy; re-run after editing
 # the brain. Agents register only at session start — restart CC after (re)generating.
 set -euo pipefail
-BRAIN="/home/tim/projects/mimir-agent/output-styles/mimir-agent.md"
+BRAIN="/home/tim/projects/mimir/output-styles/mimir-agent.md"
 OUT="$HOME/.claude/agents/mimir-probe.md"
 {
   printf -- '---\n'

@@ -13,8 +13,8 @@ if (args && typeof args === 'object') A = args
 else if (typeof args === 'string') { try { A = JSON.parse(args) } catch (e) { A = { label: args } } }
 const N = Number.isInteger(A.n) && A.n > 0 ? A.n : 10
 const LABEL = A.label || 'forge-trust'
-const FIXTURE = '/home/tim/projects/mimir-agent/evals/fixtures/trust-fixture'
-const HULDRA = '/home/tim/projects/mimir-agent/forge/huldra.js'
+const FIXTURE = '/home/tim/projects/mimir/evals/fixtures/trust-fixture'
+const HULDRA = '/home/tim/projects/mimir/forge/huldra.js'
 const WORKBASE = `/tmp/forge-trust-${LABEL}`
 
 // ── verbatim copies from forge/huldra.js (drift-guarded below) ────────────────

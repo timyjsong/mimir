@@ -28,12 +28,12 @@ const nFor = (s) => NOVR || s.n
 // collapses it to one injection, so voice isn't double-counted), and playbook = the mimir-bmad
 // skill's SKILL.md (loaded globally for every scenario). That runs the 28 scenarios under the
 // new brain+skill architecture instead of the monolithic SKILL.md + separate SOUL.
-const SPEC = A.spec || '/home/tim/projects/mimir-agent/skills/mimir/SKILL.md'
-const SOUL = A.soul || '/home/tim/projects/mimir-agent/skills/mimir/SOUL.md'
+const SPEC = A.spec || '/home/tim/projects/mimir/skills/mimir/SKILL.md'
+const SOUL = A.soul || '/home/tim/projects/mimir/skills/mimir/SOUL.md'
 // A playbook a scenario's probe needs (Relay rules live here). Also globally loadable via
 // args.playbook for the new-architecture guard. A scenario can still pull extra files via
 // `extraFiles: [{ path, label }]`.
-const BMAD = '/home/tim/projects/mimir-agent/skills/mimir-bmad/SKILL.md'
+const BMAD = '/home/tim/projects/mimir/skills/mimir-bmad/SKILL.md'
 const PLAYBOOK = A.playbook || null
 
 const SCENARIOS = [
