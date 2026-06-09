@@ -1,61 +1,85 @@
-# This repo: the mimir skill (+ its workshop)
+# This repo: Mimir — the source of the agent
 
-This repo **is** the mimir skill. The source lives here — `skills/mimir/` (the
-skill) and `agents/` (its fire-and-return worker defs) — and is **symlinked into
-`~/.claude/`**, so edits go live in any Claude Code session immediately. Every
-session here exists to improve, refine, and tune that skill.
+This repo **is** Mimir: a framework-agnostic AI lead/PM that fronts a Claude Code
+session as its default operating layer — judgment, an honest read, a spine, and a
+disciplined way of getting software built — layered on top of everything Claude Code
+already does. The source lives here and is **symlinked into `~/.claude/`**, so edits
+go live in any session immediately. Every session in this repo exists to improve,
+refine, and tune that system.
 
-**Dev loop:** edit here → it hot-reloads live (same bytes, through the symlinks) →
-`git commit` / `push`. No copy, no sync step — the repo is the single source of
-truth. (A brand-new `~/.claude/skills/mimir` symlink needs one CC restart to
-attach the first time; live thereafter.)
+Mimir is delivered as a Claude Code **output style** (an always-on persona/brain),
+**not** a skill you invoke. It is also **not** the archived legacy `/mimir` *skill*
+(the BMAD-bound planning skill it replaced — preserved at `~/projects/mimir-legacy-skill`
+and on branch `archive/legacy-skill`), and **not** any older web-app "mimir" product.
+Never use those as a reference.
 
-**Public-destined — no secrets.** Treat everything in this repo as eventually public; keep it clean (no secrets/credentials). Private context + decision history live in this project's **auto-memory** (`~/.claude/`, local, not git-backed) — by design.
+## The system at a glance
+
+- **The brain** — `output-styles/mimir-agent.md`. The ambient persona that fronts every
+  session: always-on dispositions (read the room → scale to the task → advise with a
+  spine → proportional gates → continuity) plus invoked capabilities. It's a *superset*
+  of vanilla Claude Code — on trivial work it just gets out of the way.
+- **The constitution** — `PRINCIPLES.md`. The ratified test every architecture decision
+  must pass. **Read it before touching the design.**
+- **The design spec** — `DESIGN.md`. What the system is and why it's shaped this way.
+- **The org (delegated work has rooms):**
+  - **The forge — Huldra** (`forge/huldra.js`, deployed as a Workflow at
+    `~/.claude/workflows/huldra.js`): the autonomous build. The lead never hand-edits
+    contract-governed build code — every change rides a ticket through Huldra
+    (**Brok** builds · **Sindri** reviews · **Heimdall** certifies).
+  - **The studio — Freya** (`studio/`): taste-led visual/design iteration, a separate
+    conversational room with its own persona.
+  - **The Hand** (`agents/the-hand.md`): the faceless, fire-and-return worker for heavy
+    autonomous reads (research, audits, cartography). Returns an artifact; holds no persona.
+- **Playbooks (load on demand, by intent):**
+  - `skills/mimir-bmad/` — the BMAD-METHOD v6 greenfield lifecycle (the brain loads it
+    only once a structured build is wanted).
+  - `brownfield/BROWNFIELD.md` — the cartography + bring-under-contract playbook for a
+    repo you didn't build.
+- **The eval substrate** — `evals/`. The change oracle: `scenarios.json` (the behavior
+  bank) driven by the **deployment-faithful** instrument (`mainloop-probe.js` runs the
+  real output-style under `claude -p`; `judge-mainloop.js` is the strict K=3 judge).
+  (`skills/mimir/` is retained only as the eval *before-baseline*, not a live skill.)
+
+## Dev loop
+
+Edit here → it hot-reloads live (same bytes, through the `~/.claude` symlinks) →
+`git commit` / `push` to `main`. No copy, no sync step — this repo is the single source
+of truth. The live symlinks point into **this** worktree (`~/projects/mimir`, the canonical
+`main` worktree); the legacy skill sits in a sibling worktree at `~/projects/mimir-legacy-skill`.
 
 ## Orient before you act
 
-This file is intentionally stateless: no status, no roadmap, no file map. Current
-truth lives in three places, in this order:
+This file is intentionally stateless — no status, no roadmap. Current truth lives in
+four places, in this order:
 
-- **The skill's own docs** — it ships its own maintainer/calibration doc (why it's
-  built this way + verified facts) and an eval substrate (the change oracle). Read
-  the maintainer doc before touching the skill.
-- **Your auto-memory** — the `MEMORY.md` index loads each session; decision history
-  and what's been verified. (Memory drifts from disk — re-check a named file before
-  trusting it.)
-- **git** — for what actually changed (the skill is version-controlled here now).
+- **`PRINCIPLES.md` then `DESIGN.md`** — the constitution and the design spec; plus the
+  relevant playbook/maintainer doc for the surface you're touching.
+- **Auto-memory** — the `MEMORY.md` index (in this project's `~/.claude` auto-memory,
+  local, not git-backed) carries decision history and what's been verified. Memory drifts
+  from disk — re-check a named file before trusting it.
+- **git** — for what actually changed.
 
-This directory also doubles as scratch space for exercising the live skill (spike
-BMAD installs, throwaway app builds); a stray `_bmad/` or `node_modules/` here is
-expected, not rot.
+## Working on the system
 
-## What mimir is
+It's a **coupled system** — the brain, the playbooks, the worker/persona defs, and the
+evals state one contract across several files; a change in one place usually implies others.
 
-An interactive, advisory lead/PM that drives a project through the BMAD-METHOD v6
-lifecycle — personal, single-user, mostly greenfield, runs in an interactive
-session. Advisory, not order-taking.
+- **Change it through the eval substrate, not by feel:** pin the expected behavior
+  *before* the edit (a scenario), make the smallest change that flips it, then validate in
+  a fresh context (`mainloop-probe.js` + `judge-mainloop.js`). **Removing beats adding** —
+  the brain is the lead's hot path; a recurring finding here is that the framework-agnostic
+  brain *already* does the thing, and the genuinely-new content belongs in an on-demand
+  playbook, not the hot path.
+- **Reconsider before you refactor.** Much complexity works around older platform limits;
+  before polishing a mechanism, check whether a recent release makes it unnecessary.
+- **Trust what's verified.** The records hold empirically-settled facts and open unknowns;
+  don't re-derive the settled ones, and update the record when something changes.
+- **Keep turns tight** — a few high-value questions at a time. The elicitation cadence is
+  itself something we tune; treat it as live, not fixed.
 
-It is **not** the archived legacy mimir product (the old web-app build / research
-spikes). Never use that as a reference for the skill.
+## Public-destined — no secrets
 
-## Working on the skill
-
-It's a **coupled system** — its runtime spec, playbooks, references, worker defs,
-and evals state one contract across several files. Read its own maintainer and
-change docs before editing; a change in one place usually implies others.
-
-Change it through its **eval substrate**, not by feel: pin the expected behavior
-*before* the edit, make the smallest change that flips it, then validate in a
-fresh context. Removing beats adding — the runtime spec is the lead's hot path.
-
-**Reconsider before you refactor.** Much of the skill's complexity works around
-older platform limits. Before polishing a mechanism, check whether a recent
-platform release makes it unnecessary — don't refine a workaround you might delete.
-
-**Trust what it has already verified.** The skill records empirically-settled
-facts and open unknowns; don't re-derive the settled ones, and update those
-records when something changes.
-
-Keep my turns tight — a few high-value questions at a time, not long multi-topic
-batches. (The skill's own elicitation cadence is itself something we tune — treat
-it as live, not fixed.)
+Treat everything in this repo as public. Keep it clean — no secrets, credentials, or
+private paths. Private context and decision history live in this project's auto-memory
+(`~/.claude/`, local, not git-backed) by design.
