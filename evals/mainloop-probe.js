@@ -4,7 +4,7 @@
 // system-reminder exactly as in a live interactive session) — NOT a subagent and
 // NOT a role-played spec. Deployment-faithful instrument; carrier/role-play are proxies.
 //
-// Reads evals/scenarios.json (single source of truth, extracted from brain-sweep.js) for
+// Reads evals/scenarios.json (single source of truth for the behavior bank) for
 // each scenario's situation/trigger and the outputStyle it should run under (mimir-agent,
 // or freya for designer scenarios). Each probe is a fresh `claude -p` process, so brain
 // variants hot-reload with no CC restart. Globals load from ~/.claude regardless of cwd;

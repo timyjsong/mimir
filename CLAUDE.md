@@ -38,8 +38,8 @@ Never use those as a reference.
     repo you didn't build.
 - **The eval substrate** — `evals/`. The change oracle: `scenarios.json` (the behavior
   bank) driven by the **deployment-faithful** instrument (`mainloop-probe.js` runs the
-  real output-style under `claude -p`; `judge-mainloop.js` is the strict K=3 judge).
-  (`skills/mimir/` is retained only as the eval *before-baseline*, not a live skill.)
+  real output-style under `claude -p`; `judge-mainloop.js` is the strict K=3 judge;
+  `judge-sweep.js` batch-judges full-bank sweeps).
 
 ## Dev loop
 

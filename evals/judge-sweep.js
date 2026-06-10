@@ -1,6 +1,6 @@
 export const meta = {
   name: 'judge-sweep',
-  description: 'Batch STRICT K=3-majority judge over a full main-loop re-baseline sweep. Each judge agent reads scenarios.json (oracle by id) + the per-scenario response file in <dir>. args {scenariosFile, dir, ids:[...], n, k}. Mirrors brain-sweep/judge-mainloop scoring so numbers are comparable across instruments.',
+  description: 'Batch STRICT K=3-majority judge over a full main-loop re-baseline sweep. Each judge agent reads scenarios.json (oracle by id) + the per-scenario response file in <dir>. args {scenariosFile, dir, ids:[...], n, k}. Mirrors judge-mainloop scoring so numbers are comparable.',
   phases: [{ title: 'Judge' }],
 }
 

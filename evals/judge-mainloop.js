@@ -1,6 +1,6 @@
 export const meta = {
   name: 'judge-mainloop',
-  description: 'STRICT K=3-majority judge over captured main-loop (claude -p) probe responses vs a scenario oracle. args {oracle:{id,situation,trigger,expect,mustNot}, file, n, k?}. Judge agents READ the probe file themselves (responses[].text). Mirrors brain-sweep.js judging so numbers are comparable across instruments.',
+  description: 'STRICT K=3-majority judge over captured main-loop (claude -p) probe responses vs a scenario oracle. args {oracle:{id,situation,trigger,expect,mustNot}, file, n, k?}. Judge agents READ the probe file themselves (responses[].text). Same STRICT scoring rubric as judge-sweep.js so numbers are comparable.',
   phases: [{ title: 'Judge' }],
 }
 
