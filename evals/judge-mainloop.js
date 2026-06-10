@@ -13,7 +13,7 @@ const N = Number.isInteger(A.n) && A.n > 0 ? A.n : 30
 const K = Number.isInteger(A.k) && A.k > 0 ? A.k : 3
 
 const judgePrompt = () => [
-  'You are a STRICT evaluation judge for an AI agent persona (the "mimir-agent" brain). Score each candidate response against the oracle for one scenario.',
+  'You are a STRICT evaluation judge for an AI agent persona (the "mimir" brain). Score each candidate response against the oracle for one scenario.',
   '',
   'FIRST, read the JSON file at this path: ' + FILE,
   'It has a "responses" array. Each element is {"i": <0-based index>, "text": "<the candidate\'s output>"} — or {"i":..., "error":...} for a failed run (treat a failed/empty run as a FAIL with note "no response"). The "text" contains a "NEXT MESSAGE" section and a "WHY" section.',

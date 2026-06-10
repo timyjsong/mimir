@@ -5,14 +5,14 @@
 // NOT a role-played spec. Deployment-faithful instrument; carrier/role-play are proxies.
 //
 // Reads evals/scenarios.json (single source of truth for the behavior bank) for
-// each scenario's situation/trigger and the outputStyle it should run under (mimir-agent,
+// each scenario's situation/trigger and the outputStyle it should run under (mimir,
 // or freya for designer scenarios). Each probe is a fresh `claude -p` process, so brain
 // variants hot-reload with no CC restart. Globals load from ~/.claude regardless of cwd;
 // we run from a neutral temp dir so no project CLAUDE.md interferes.
 //
 // Usage: node mainloop-probe.js <scenarioId> <N> [outFile] [brainStyleOverride]
 //   brainStyleOverride: deploy-name of an output style to test IN PLACE OF the live
-//   'mimir-agent' brain (e.g. 'mimir-candidate' for staged self-iteration — see
+//   'mimir' brain (e.g. 'mimir-candidate' for staged self-iteration — see
 //   ../SELF-ITERATION.md). Only the brain is swapped; non-brain scenarios (e.g. freya) keep theirs.
 //   env CONC=<n> caps concurrent claude processes (default 6)
 const { execFile } = require('child_process');
@@ -49,11 +49,11 @@ const CWD = '/tmp/mimir-mainloop-probe';
 const s = byId[id];
 if (!s) { console.error('unknown scenario', id, '— have:', Object.keys(byId).join(',')); process.exit(1); }
 // Optional brain-style override (argv[5]): test a candidate brain (e.g. 'mimir-candidate')
-// in place of the live 'mimir-agent'. Only the brain is swapped — non-mimir-agent scenarios
+// in place of the live 'mimir'. Only the brain is swapped — non-mimir scenarios
 // (e.g. freya designer scenarios) keep their own style. See ../SELF-ITERATION.md.
 const styleOverride = process.argv[5];
-const baseStyle = s.outputStyle || 'mimir-agent';
-const outputStyle = (styleOverride && baseStyle === 'mimir-agent') ? styleOverride : baseStyle;
+const baseStyle = s.outputStyle || 'mimir';
+const outputStyle = (styleOverride && baseStyle === 'mimir') ? styleOverride : baseStyle;
 fs.mkdirSync(CWD, { recursive: true });
 fs.mkdirSync(path.dirname(outfile), { recursive: true });
 const prompt = probePrompt(s);

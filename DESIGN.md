@@ -5,7 +5,7 @@
 > The spec we build from. Mimir stops being a BMAD-bound planning skill and becomes
 > the **framework-agnostic ambient brain** that fronts every Claude Code session —
 > replacing vanilla "Claude" as the default layer between the user and the work.
-> Decision history + protocol live in auto-memory (`[[mimir-agent-build]]`); this doc
+> Decision history + protocol live in auto-memory (`[[mimir-build]]`); this doc
 > is the durable design spec.
 
 ## 1. What it is
@@ -28,7 +28,7 @@ is kept as a core disposition. The name stays **Mimir**.
 
 ## 2. Architecture — author content, not plumbing
 
-The brain is a **Claude Code output style** (`~/.claude/output-styles/mimir-agent.md`)
+The brain is a **Claude Code output style** (`~/.claude/output-styles/mimir.md`)
 with frontmatter **`keep-coding-instructions: true`** — so the session runs vanilla CC's
 full software-engineering competence *plus* the brain layered on top. That single flag
 *is* the superset guarantee, by construction.
@@ -151,7 +151,7 @@ A: design (this doc) · B: re-architect the core (eval-first; brain output style
 triage routing + BMAD-as-playbook; the 28 BMAD scenarios as regression guard) — *hand off
 to the user for dogfooding after B* · C: enrich the brain (calibration, reframe, initiative,
 taste, consequence-sense; `USER.md`) · D: make it the default (`outputStyle` cutover — the
-user's trigger; converge `mimir-agent`→`main`). Detail + protocol in `[[mimir-agent-build]]`.
+user's trigger; converge `mimir`→`main`). Detail + protocol in `[[mimir-build]]`.
 
 **Hard boundary:** nothing touches the live `mimir`, the default `outputStyle`, or `main`
 until the user has dogfooded and approved. The cutover is the user's trigger.

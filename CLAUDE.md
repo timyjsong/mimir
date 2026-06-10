@@ -15,7 +15,7 @@ Never use those as a reference.
 
 ## The system at a glance
 
-- **The brain** — `output-styles/mimir-agent.md`. The ambient persona that fronts every
+- **The brain** — `output-styles/mimir.md`. The ambient persona that fronts every
   session: always-on dispositions (read the room → scale to the task → advise with a
   spine → proportional gates → continuity) plus invoked capabilities. It's a *superset*
   of vanilla Claude Code — on trivial work it just gets out of the way.
@@ -71,7 +71,7 @@ evals state one contract across several files; a change in one place usually imp
   the brain is the lead's hot path; a recurring finding here is that the framework-agnostic
   brain *already* does the thing, and the genuinely-new content belongs in an on-demand
   playbook, not the hot path.
-- **The brain is the global default — stage edits to it.** `output-styles/mimir-agent.md` fronts *every* session (the live default is a symlink to this working tree), so a behavioral change to it follows a staged loop — candidate → eval → **promote on green** — so a half-baked edit can't become the live default. Full protocol: [`SELF-ITERATION.md`](SELF-ITERATION.md).
+- **The brain is the global default — stage edits to it.** `output-styles/mimir.md` fronts *every* session (the live default is a symlink to this working tree), so a behavioral change to it follows a staged loop — candidate → eval → **promote on green** — so a half-baked edit can't become the live default. Full protocol: [`SELF-ITERATION.md`](SELF-ITERATION.md).
 - **Reconsider before you refactor.** Much complexity works around older platform limits;
   before polishing a mechanism, check whether a recent release makes it unnecessary.
 - **Trust what's verified.** The records hold empirically-settled facts and open unknowns;

@@ -25,7 +25,7 @@ const BATCH_SCHEMA = {
 }
 
 const judgePrompt = (id) => [
-  'You are a STRICT evaluation judge for an AI agent persona (default the "mimir-agent" brain; designer scenarios are the "freya" persona). You will score ONE scenario.',
+  'You are a STRICT evaluation judge for an AI agent persona (default the "mimir" brain; designer scenarios are the "freya" persona). You will score ONE scenario.',
   '',
   'STEP 1 — load the oracle: Read the JSON array file at ' + SF + ' and find the object whose "id" === "' + id + '". Use its fields: situation, trigger, expect (the REQUIRED correct behavior), mustNot (any one present => FAIL).',
   'STEP 2 — load candidates: Read the file ' + DIR + '/' + id + '.json; it has a "responses" array of {"i": <0-based>, "text": "<candidate output>"} (or {"i":..., "error":...} for a failed run — treat as FAIL, note "no response"). Each text has a "NEXT MESSAGE" section and a "WHY" section.',

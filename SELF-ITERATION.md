@@ -1,8 +1,8 @@
 # Self-iteration — how Mimir safely changes itself
 
 > Mimir is the **global default** output style now: every Claude Code session starts as Mimir.
-> This repo is its source, and the live brain (`~/.claude/output-styles/mimir-agent.md`) is a
-> **symlink into this repo's working tree** — so an edit to `output-styles/mimir-agent.md`
+> This repo is its source, and the live brain (`~/.claude/output-styles/mimir.md`) is a
+> **symlink into this repo's working tree** — so an edit to `output-styles/mimir.md`
 > becomes the default for the *next* session, in *any* project. This is the protocol that keeps
 > self-modification safe. (It specializes the general change-discipline in `CLAUDE.md` for the
 > one surface that's now load-bearing for the whole environment.)
@@ -25,12 +25,12 @@ process; it doesn't hand the human a chore.
   a fresh `claude -p`. There's no runaway self-modification, and brain changes are tested on fresh
   processes (that's exactly why `evals/mainloop-probe.js` spawns `claude -p`).
 - **What makes it risky:** the live default is a *symlink to this working tree*. A half-baked edit
-  to `output-styles/mimir-agent.md` is the live brain for the next session you open **anywhere** —
+  to `output-styles/mimir.md` is the live brain for the next session you open **anywhere** —
   until you fix it. A regression here hits everything, not an opt-in skill.
 
 ## The rule
 
-**Never hand-edit the live `output-styles/mimir-agent.md` for a behavioral change.** Stage it on a
+**Never hand-edit the live `output-styles/mimir.md` for a behavioral change.** Stage it on a
 candidate, prove it on evals, and *promote* on green. (Trivial/cosmetic edits — a comment typo —
 can go direct; proportional. Anything that changes behavior takes the loop below.)
 
@@ -44,9 +44,9 @@ evals/brain-candidate.sh seed   # live -> candidate (+ deploy). Re-run anytime t
 ```
 
 > **Why the helper, not a bare `cp`:** Claude Code resolves an output style by its **`name:`
-> frontmatter**, not its filename. A plain `cp` leaves `name: mimir-agent` in the candidate — so a
+> frontmatter**, not its filename. A plain `cp` leaves `name: mimir` in the candidate — so a
 > probe targeting `mimir-candidate` **silently falls back to the *live* brain** (a *false green*),
-> and two files both claiming `name: mimir-agent` can even corrupt the live default's own
+> and two files both claiming `name: mimir` can even corrupt the live default's own
 > resolution. The helper rewrites the name on both seed *and* promote so you can't hit that.
 > (Sanity check after a fresh seed: make one distinct edit and probe once — it should *visibly*
 > differ from live before you trust any green run.)
@@ -56,7 +56,7 @@ evals/brain-candidate.sh seed   # live -> candidate (+ deploy). Re-run anytime t
 1. **Pin the behavior first.** Add or adjust a scenario in `evals/scenarios.json` that captures
    what should change — and the regression-guard scenarios that must *not* move. The eval is the
    oracle; pin before you edit.
-2. **Baseline the live brain** on the affected scenarios (no override → tests live `mimir-agent`):
+2. **Baseline the live brain** on the affected scenarios (no override → tests live `mimir`):
    ```sh
    node evals/mainloop-probe.js <scenario-id> <N> /tmp/iter/base-<id>.json
    ```
@@ -74,25 +74,25 @@ evals/brain-candidate.sh seed   # live -> candidate (+ deploy). Re-run anytime t
    evals/brain-candidate.sh promote && git add -A && git commit
    ```
    **That promote is the only moment the global default changes** (it copies candidate → live and
-   restores `name: mimir-agent`). Until then, a half-baked candidate is *structurally* unable to
+   restores `name: mimir`). Until then, a half-baked candidate is *structurally* unable to
    become the live default — it isn't in the live file.
 
 ## When you stop
 
-**Leave the live brain green.** `output-styles/mimir-agent.md` is the default for your next session
+**Leave the live brain green.** `output-styles/mimir.md` is the default for your next session
 anywhere — don't walk away with a broken or experimental *live* brain. (The candidate scratch can
 stay dirty; it's never the default.)
 
 ## If a bad brain does go live
 
-- **Uncommitted:** `git checkout output-styles/mimir-agent.md` — instantly restores the
+- **Uncommitted:** `git checkout output-styles/mimir.md` — instantly restores the
   last-committed brain; the next session is back to normal.
 - **A bad *committed* brain:** `git revert <sha>` (or check out the previous version of the file and
   commit). It's all git + a symlink — recovery is one command.
 
 ## Scope
 
-This protocol is for **the brain** (`output-styles/mimir-agent.md`) specifically, because it's the
+This protocol is for **the brain** (`output-styles/mimir.md`) specifically, because it's the
 global default — the highest-stakes, every-session surface. Other surfaces follow ordinary
 eval-driven discipline (pin → smallest change → validate) without the candidate dance: the on-demand
 playbooks (`skills/mimir-bmad`, `brownfield/`) load only when intent calls them, and

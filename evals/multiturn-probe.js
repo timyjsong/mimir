@@ -23,7 +23,7 @@ const TURNS = [
 ];
 
 const N = parseInt(process.argv[2] || '15', 10);
-const outputStyle = process.argv[3] || 'mimir-agent';
+const outputStyle = process.argv[3] || 'mimir';
 const prefix = process.argv[4] || `/tmp/ml-mt-${outputStyle}`;
 const CONCURRENCY = parseInt(process.env.CONC || '5', 10);
 const CWD = '/tmp/mimir-mainloop-probe';

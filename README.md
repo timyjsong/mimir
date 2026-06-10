@@ -53,7 +53,7 @@ The myth-names are the fun part. The engineering is the point. Mimir doesn't ear
 
 | Path | What's there |
 |---|---|
-| [`output-styles/mimir-agent.md`](output-styles/mimir-agent.md) | **Mimir himself** — the always-on persona spec |
+| [`output-styles/mimir.md`](output-styles/mimir.md) | **Mimir himself** — the always-on persona spec |
 | [`PRINCIPLES.md`](PRINCIPLES.md) | the constitution every decision must pass |
 | [`DESIGN.md`](DESIGN.md) | the design blueprint + the reasoning behind each call |
 | [`forge/huldra.js`](forge/huldra.js) | the forge — build → adversarial review → certify |
