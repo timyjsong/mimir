@@ -72,6 +72,7 @@ evals state one contract across several files; a change in one place usually imp
   brain *already* does the thing, and the genuinely-new content belongs in an on-demand
   playbook, not the hot path.
 - **The brain is the global default — stage edits to it.** `output-styles/mimir.md` fronts *every* session (the live default is a symlink to this working tree), so a behavioral change to it follows a staged loop — candidate → eval → **promote on green** — so a half-baked edit can't become the live default. Full protocol: [`SELF-ITERATION.md`](SELF-ITERATION.md).
+- **Across a long campaign, two always-on disciplines** (full detail in `SELF-ITERATION.md`): **own the commit-seam call** — commit verified, tested seams and flag them in-turn, rather than letting a campaign pile into one unreviewable diff (overrides the default "commit only when asked" for this work); and during iteration **print the empirical context-window %** (summed off the session transcript) in the status footer **every turn**, converging to a seam past ~50%. The every-turn print is hand-run until the backlogged context-watch hook automates it deterministically.
 - **Reconsider before you refactor.** Much complexity works around older platform limits;
   before polishing a mechanism, check whether a recent release makes it unnecessary.
 - **Trust what's verified.** The records hold empirically-settled facts and open unknowns;

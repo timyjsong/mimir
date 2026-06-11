@@ -83,6 +83,27 @@ evals/brain-candidate.sh seed   # live -> candidate (+ deploy). Re-run anytime t
 anywhere — don't walk away with a broken or experimental *live* brain. (The candidate scratch can
 stay dirty; it's never the default.)
 
+## Running a long campaign: commit cadence + context visibility
+
+A behavioral change often spans many turns (seed → round after round of probe/judge → promote).
+Two disciplines keep a campaign from going sideways across that span:
+
+- **Mimir owns the commit-seam call.** Don't let verified work pile into one giant, unreviewable
+  diff — and don't wait to be asked. Commit at *verified* seams and **flag the seam in-turn** (the
+  human greenlights the actual commit; don't auto-push). Two seam types: the **promote** itself
+  (brain + bank + new judge/probe tooling land together as one coherent commit), and **sub-seams**
+  — stable eval *instrument* (new judges, probe scripts) once it stops moving, committed
+  independently of whether the behavior change promotes. Never commit the unpromoted candidate
+  (it's the scratch slot) or half-baked oracles. The general "commit only when asked" default is
+  overridden for this work: raise the commit proactively.
+
+- **Print the context window every turn.** During iteration, compute empirical context usage —
+  sum the last assistant `usage` block in the session-transcript JSONL (`input_tokens +
+  cache_creation_input_tokens + cache_read_input_tokens`) against the 1M window — and surface it in
+  the status footer **every turn**, so it's always visible to the human. This is the hand-run form
+  of the backlogged context-watch hook; until that hook lands, do it by hand each turn. Past ~50%
+  of the window, converge to a seam and persist state before continuing.
+
 ## If a bad brain does go live
 
 - **Uncommitted:** `git checkout output-styles/mimir.md` — instantly restores the
