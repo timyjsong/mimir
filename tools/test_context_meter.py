@@ -177,7 +177,7 @@ class ReadIntegration(unittest.TestCase):
             {"message": {"content": [
                 {"text": block("Set model to \x1b[1mOpus 4.8 (1M context)\x1b[22m and saved as your default model")}]}},
         ])
-        usage, msg_model, set_model, cwd = cm.read(path)
+        usage, _b, msg_model, set_model, cwd = cm.read(path)
         self.assertEqual(set_model, "Opus 4.8 (1M context)")
         self.assertEqual(msg_model, "claude-opus-4-8")
         self.assertEqual(cwd, "/home/tim/projects/mimir")
@@ -189,8 +189,85 @@ class ReadIntegration(unittest.TestCase):
             {"message": {"usage": {"input_tokens": 1, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
             {"message": {"usage": {"input_tokens": 9, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
         ])
-        usage, *_ = cm.read(path)
+        usage, boundaries, *_ = cm.read(path)
         self.assertEqual(usage["input_tokens"], 9)
+
+    def test_turn_boundaries_for_burn(self):
+        path = self._write([
+            {"type": "user", "message": {"role": "user", "content": "hi"}},
+            {"message": {"usage": {"input_tokens": 100, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
+            {"type": "user", "message": {"role": "user", "content": "more"}},
+            {"message": {"usage": {"input_tokens": 250, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
+            {"type": "user", "message": {"role": "user", "content": "again"}},
+            {"message": {"usage": {"input_tokens": 400, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
+        ])
+        usage, boundaries, *_ = cm.read(path)
+        self.assertEqual(boundaries, [0, 100, 250])
+        self.assertEqual(boundaries[-1] - boundaries[-2], 150)   # previous completed turn's burn
+
+    def test_tool_results_and_commands_not_boundaries(self):
+        path = self._write([
+            {"type": "user", "message": {"role": "user", "content": "hi"}},
+            {"message": {"usage": {"input_tokens": 100, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
+            {"type": "user", "message": {"role": "user", "content": [{"type": "tool_result", "content": "x"}]}},
+            {"type": "user", "message": {"role": "user", "content": "<local-command-stdout>Set model to claude-opus-4-8[1m]</local-command-stdout>"}},
+            {"message": {"usage": {"input_tokens": 200, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
+        ])
+        usage, boundaries, *_ = cm.read(path)
+        self.assertEqual(boundaries, [0])   # only the one genuine prompt
+
+    def test_midsession_model_switch(self):
+        # opus -> sonnet mid-session: meter must report the POST-switch model + window
+        path = self._write([
+            {"message": {"model": "claude-opus-4-8", "usage": {"input_tokens": 50, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
+            {"type": "user", "message": {"role": "user", "content": block("Set model to claude-sonnet-4-6")}},
+            {"message": {"model": "claude-sonnet-4-6", "usage": {"input_tokens": 60, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
+        ])
+        usage, boundaries, msg_model, set_model, cwd = cm.read(path)
+        self.assertEqual(set_model, "claude-sonnet-4-6")
+        self.assertEqual(cm.resolve(cm.tokens(usage), set_model, msg_model, None), (MB, "model-log", "claude-sonnet-4-6"))
+
+    def test_midsession_window_switch_up(self):
+        # opus base -> opus[1m]: window flips 200K -> 1M post-switch
+        path = self._write([
+            {"message": {"model": "claude-opus-4-8", "usage": {"input_tokens": 50, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
+            {"type": "user", "message": {"role": "user", "content": block("Set model to claude-opus-4-8[1m]")}},
+            {"message": {"model": "claude-opus-4-8", "usage": {"input_tokens": 60, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
+        ])
+        usage, boundaries, msg_model, set_model, cwd = cm.read(path)
+        self.assertEqual(set_model, "claude-opus-4-8[1m]")
+        self.assertEqual(cm.resolve(cm.tokens(usage), set_model, msg_model, None)[0], M1)
+
+    def test_midsession_window_switch_down(self):
+        # opus[1m] -> opus base (two switches): last wins, window 1M -> 200K (used < 200K, no backstop)
+        path = self._write([
+            {"type": "user", "message": {"role": "user", "content": block("Set model to claude-opus-4-8[1m]")}},
+            {"type": "user", "message": {"role": "user", "content": block("Set model to claude-opus-4-8")}},
+            {"message": {"model": "claude-opus-4-8", "usage": {"input_tokens": 50, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
+        ])
+        usage, boundaries, msg_model, set_model, cwd = cm.read(path)
+        self.assertEqual(set_model, "claude-opus-4-8")
+        self.assertEqual(cm.resolve(cm.tokens(usage), set_model, msg_model, None)[0], MB)
+
+
+class Fmt(unittest.TestCase):
+    def test_k(self):
+        self.assertEqual(cm.fmt(402014), "402K")
+
+    def test_window_200k(self):
+        self.assertEqual(cm.fmt(200000), "200K")
+
+    def test_exact_1m(self):
+        self.assertEqual(cm.fmt(1000000), "1M")
+
+    def test_fractional_m(self):
+        self.assertEqual(cm.fmt(1400000), "1.4M")
+
+    def test_tokens_total(self):
+        self.assertEqual(cm.tokens({"input_tokens": 10, "cache_creation_input_tokens": 5, "cache_read_input_tokens": 100000}), 100015)
+
+    def test_tokens_none(self):
+        self.assertEqual(cm.tokens(None), 0)
 
 
 if __name__ == "__main__":

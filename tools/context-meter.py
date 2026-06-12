@@ -39,6 +39,20 @@ import json, sys, os, glob, re
 
 WIN_1M, WIN_BASE = 1_000_000, 200_000
 
+def fmt(n):
+    """Human K/M token count: 402014 -> '402K', 1_000_000 -> '1M', 1_400_000 -> '1.4M'."""
+    n = int(n)
+    if abs(n) >= 1_000_000:
+        return f"{n / 1_000_000:.1f}".rstrip("0").rstrip(".") + "M"
+    return f"{round(n / 1000)}K"
+
+
+def tokens(u):
+    """Total context tokens in a usage block (input + cache_creation + cache_read)."""
+    u = u or {}
+    return u.get("input_tokens", 0) + u.get("cache_creation_input_tokens", 0) + u.get("cache_read_input_tokens", 0)
+
+
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 
 
@@ -103,8 +117,25 @@ def _backstop(used, window, src, current):
     return window, src, current
 
 
+def is_user_prompt(o):
+    """A genuine typed user prompt (a turn boundary) — NOT a tool result or command-stdout."""
+    if o.get("type") != "user" or o.get("toolUseResult") is not None:
+        return False
+    m = o.get("message", {}) or {}
+    if m.get("role") != "user":
+        return False
+    c = m.get("content", "")
+    if isinstance(c, list):
+        return not any(isinstance(b, dict) and b.get("type") == "tool_result" for b in c)
+    if isinstance(c, str):
+        return not c.lstrip().startswith("<")   # exclude <local-command-stdout> etc.
+    return False
+
+
 def read(transcript):
     usage = msg_model = set_model = cwd = None
+    cur_total = 0
+    boundaries = []   # context-token total at each genuine user-prompt (turn) boundary
     with open(transcript) as f:
         for line in f:
             try:
@@ -112,10 +143,13 @@ def read(transcript):
             except Exception:
                 continue
             cwd = o.get("cwd") or cwd
+            if is_user_prompt(o):
+                boundaries.append(cur_total)   # = end-of-previous-turn total
             m = o.get("message", {}) or {}
             u = m.get("usage") or o.get("usage")
             if isinstance(u, dict) and u.get("input_tokens") is not None:
                 usage = u
+                cur_total = tokens(u)
             if m.get("model"):
                 msg_model = m["model"]
             c = m.get("content", "")
@@ -125,7 +159,7 @@ def read(transcript):
                 pm = parse_set_model(c)
                 if pm:
                     set_model = pm   # last wins = current
-    return usage, msg_model, set_model, cwd
+    return usage, boundaries, msg_model, set_model, cwd
 
 
 def project_used_1m(cwd, base):
@@ -160,19 +194,23 @@ def main():
     else:
         transcript = args[0]
 
-    usage, msg_model, set_model, cwd = read(transcript)
+    usage, boundaries, msg_model, set_model, cwd = read(transcript)
     if not usage:
         print("no usage block found", file=sys.stderr); sys.exit(1)
-    used = usage.get("input_tokens", 0) + usage.get("cache_creation_input_tokens", 0) + usage.get("cache_read_input_tokens", 0)
+    used = tokens(usage)
+    # burn = growth of the most recently COMPLETED turn (last two prompt boundaries).
+    burn = boundaries[-1] - boundaries[-2] if len(boundaries) >= 2 else None
 
     base = (msg_model or "").replace("[1m]", "")
     lmu_1m = None if set_model is not None else project_used_1m(cwd, base)
     window, src, current = resolve(used, set_model, msg_model, lmu_1m)
 
     pct = used / window * 100
+    disp = (current or "?").replace("[1m]", "").removeprefix("claude-")
+    burn_str = "" if burn is None else f"  burn={'+' if burn >= 0 else '-'}{fmt(abs(burn))}"
     measured = src.split("+")[0] in ("model-log", "lastModelUsage") or "used>200k" in src
     note = "" if measured else f"  (window={src} — not measured)"
-    print(f"{used:,} / {window:,} ({pct:.1f}%)  model={current or '?'}  [src:{src}]{note}")
+    print(f"{fmt(used)} / {fmt(window)} ({pct:.1f}%)  model={disp}{burn_str}  [src:{src}]{note}")
 
 
 if __name__ == "__main__":
