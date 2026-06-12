@@ -25,12 +25,19 @@ if [ -n "$transcript" ] && [ -f "$transcript" ]; then
   line="$(python3 "$METER" "$transcript" 2>/dev/null)" || line=""
 fi
 
-# Fallback: derive the project dir from cwd if transcript_path was absent/unusable.
+# Fallback (primary produced no reading): resolve ONLY the current session's own
+# transcript, keyed by session id — NEVER newest-by-mtime. On a cold first turn the
+# current transcript has no usage yet, and "newest in the project dir" then resolves
+# to the PREVIOUS session, leaking its number (the 59.6%-on-a-fresh-session bug). The
+# session id is the transcript's basename; take it from the hook's session_id field
+# (if present), else from transcript_path itself. No match -> emit nothing.
 if [ -z "$line" ]; then
+  sid="$(field session_id)"
+  [ -n "$sid" ] || { [ -n "$transcript" ] && sid="$(basename "$transcript" .jsonl)"; }
   cwd="$(field cwd)"
   dir="$HOME/.claude/projects/$(printf '%s' "$cwd" | sed 's#/#-#g')"
-  if [ -n "$cwd" ] && [ -d "$dir" ]; then
-    line="$(python3 "$METER" --session-dir "$dir" 2>/dev/null)" || line=""
+  if [ -n "$sid" ] && [ -f "$dir/$sid.jsonl" ]; then
+    line="$(python3 "$METER" "$dir/$sid.jsonl" 2>/dev/null)" || line=""
   fi
 fi
 

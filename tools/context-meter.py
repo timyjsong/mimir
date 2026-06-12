@@ -146,6 +146,8 @@ def read(transcript):
             if is_user_prompt(o):
                 boundaries.append(cur_total)   # = end-of-previous-turn total
             m = o.get("message", {}) or {}
+            if m.get("model") == "<synthetic>":
+                continue   # interrupt/placeholder entry — no real usage or model; would zero the meter
             u = m.get("usage") or o.get("usage")
             if isinstance(u, dict) and u.get("input_tokens") is not None:
                 usage = u

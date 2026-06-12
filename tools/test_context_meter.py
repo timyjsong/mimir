@@ -238,6 +238,19 @@ class ReadIntegration(unittest.TestCase):
         self.assertEqual(set_model, "claude-opus-4-8[1m]")
         self.assertEqual(cm.resolve(cm.tokens(usage), set_model, msg_model, None)[0], M1)
 
+    def test_synthetic_entry_skipped(self):
+        # An interrupt writes a <synthetic> placeholder at the tail; it must NOT become
+        # the reported usage/model (the "0K / model=<synthetic>" bug from an interrupted turn).
+        path = self._write([
+            {"message": {"model": "claude-opus-4-8",
+                         "usage": {"input_tokens": 50_000, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
+            {"message": {"model": "<synthetic>",
+                         "usage": {"input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
+        ])
+        usage, _b, msg_model, _sm, _cwd = cm.read(path)
+        self.assertEqual(cm.tokens(usage), 50_000)   # the real turn, not the synthetic 0
+        self.assertEqual(msg_model, "claude-opus-4-8")
+
     def test_midsession_window_switch_down(self):
         # opus[1m] -> opus base (two switches): last wins, window 1M -> 200K (used < 200K, no backstop)
         path = self._write([
