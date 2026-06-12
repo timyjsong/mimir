@@ -62,7 +62,7 @@ function runOne(i) {
   return new Promise((resolve) => {
     execFile('claude',
       ['-p', '--model', 'opus', '--settings', JSON.stringify({ outputStyle }), prompt],
-      { cwd: CWD, maxBuffer: 10 * 1024 * 1024, timeout: 180000 },
+      { cwd: CWD, maxBuffer: 10 * 1024 * 1024, timeout: 180000, env: { ...process.env, MIMIR_NO_METER: '1' } },
       (err, stdout, stderr) => {
         if (err) resolve({ i, error: String(err).slice(0, 300), stderr: String(stderr).slice(0, 300), text: stdout || '' });
         else resolve({ i, text: stdout });

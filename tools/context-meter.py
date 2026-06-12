@@ -7,28 +7,100 @@ No hardcoded window, no statusline plumbing. Everything comes from the session t
   USAGE  = the last assistant `usage` block (input + cache_creation + cache_read).
            Verified 2026-06-11 to match `/context` to within a hair.
 
-  WINDOW = resolved in three tiers (first that fires wins):
+  WINDOW = resolved in three tiers (first that fires wins), then a physical backstop:
     1. The LAST `/model` "Set model to <id>" line — read ONLY from real command-stdout
-       entries (`<local-command-stdout>`), never from message prose (a 2026-06-11 test
-       caught the regex matching the agent's own quoted text). This carries the [1m]
-       variant that per-message `message.model` drops, and it's switch-aware (proven
-       across 4 live switches incl. a variant-only opus->opus[1m] change).
+       entries (`<local-command-stdout>`), never from message prose. Two real formats are
+       handled (see parse_set_model): the raw id (`...claude-opus-4-8[1m]</...>`) and the
+       friendly ANSI-wrapped label (`...\x1b[1mOpus 4.8 (1M context)\x1b[22m and saved...`).
+       Switch-aware; carries the [1m] / "1M context" marker that per-message `message.model`
+       drops.
     2. Else: cross-ref ~/.claude.json projects[<cwd>].lastModelUsage — if a `<base>[1m]`
        variant of the current base model was used in this project, assume [1m]. Catches
-       bare-launch sessions that never /model-switched (where the suffix is nowhere in
-       the transcript).
+       bare-launch sessions that never /model-switched.
     3. Else: the base model's default window (~200k), LABELED as a lookup.
 
-  Suffix `[1m]` => 1,000,000; every base id => 200,000 (the only distinction that exists
-  in practice for current Claude models). The genuinely ambiguous case — a project that
-  used BOTH opus-200k and opus[1m] with no /model this session — is labeled, not guessed.
+  BACKSTOP (all tiers): a request's context physically cannot exceed its window, so if
+  `used > 200k` the window MUST be the 1M variant — we infer it and tag the source
+  `...+used>200k`. This corrects an under-detected window (the old 169.8% artifact) rather
+  than cosmetically clamping it.
+
+  Suffix `[1m]` / label "1M context" => 1,000,000; every base id => 200,000 (the only
+  distinction that exists in practice for current Claude models). The genuinely ambiguous
+  case — a project that used BOTH opus-200k and opus[1m] with no /model this session and
+  used <= 200k — is labeled (`[src:lookup?]`), not guessed.
 
 Usage:  context-meter.py <transcript.jsonl>
         context-meter.py --session-dir <~/.claude/projects/<slug>>   # newest transcript
+
+Pure detection logic (strip_ansi / parse_set_model / window_for_model / resolve) is unit-
+tested in test_context_meter.py — run `python3 tools/test_context_meter.py`.
 """
 import json, sys, os, glob, re
 
 WIN_1M, WIN_BASE = 1_000_000, 200_000
+
+ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def strip_ansi(s):
+    return ANSI_RE.sub("", s)
+
+
+def parse_set_model(content):
+    """Extract the current model id/label from a /model command-stdout content block.
+
+    Returns the cleaned model string (last switch wins = current), or None. Only trusts
+    real `<local-command-stdout>` blocks, never message prose. Handles both observed
+    formats:
+      raw id      -> "Set model to claude-opus-4-8[1m]</local-command-stdout>"
+      friendly    -> "Set model to \\x1b[1mOpus 4.8 (1M context)\\x1b[22m and saved as ..."
+
+    A real switch is a message whose content STARTS WITH `<local-command-stdout>` (the whole
+    content is the command block). Requiring `startswith` — not just "contains" — rejects
+    prose/code/tool-output that merely quotes the phrase (e.g. a session about this tool,
+    where the literal text "\\x1b[1m" appears un-stripped because it isn't a real ESC byte).
+    """
+    if not content.lstrip().startswith("<local-command-stdout>"):
+        return None
+    text = strip_ansi(content)
+    model = None
+    # Non-greedy capture bounded by the first terminator (closing tag, the trailing
+    # "and saved..." prose, or newline/end) so each switch is matched separately and the
+    # LAST one wins. Then drop a trailing "(default)" note.
+    for mm in re.finditer(r"Set model to\s+(.+?)(?=</|\band saved\b|[\r\n]|$)", text):
+        rest = re.sub(r"\s*\(default\)\s*$", "", mm.group(1).strip()).strip()
+        if rest and not rest.startswith("<"):   # skip the "<id>" prose placeholder
+            model = rest
+    return model
+
+
+def window_for_model(model_str):
+    """200k vs 1M from a model id/label. `[1m]` suffix or '1M context' label => 1M."""
+    low = (model_str or "").lower()
+    return WIN_1M if ("[1m]" in low or "1m context" in low) else WIN_BASE
+
+
+def resolve(used, set_model, msg_model, lmu_1m):
+    """Pure window resolution. Returns (window, src, current_model_str).
+
+    lmu_1m is the precomputed tier-2 result (True / False / None) so this stays pure and
+    unit-testable. The used>200k backstop is applied last and overrides any 200k call.
+    """
+    if set_model is not None:                                    # tier 1
+        return _backstop(used, window_for_model(set_model), "model-log", set_model)
+    base = (msg_model or "").replace("[1m]", "")
+    if lmu_1m is True:                                           # tier 2
+        return _backstop(used, WIN_1M, "lastModelUsage", base + "[1m]")
+    if lmu_1m is None:                                           # tier 3 (ambiguous/unknown)
+        return _backstop(used, WIN_BASE, "lookup?", msg_model)
+    return _backstop(used, WIN_BASE, "base-default", msg_model)
+
+
+def _backstop(used, window, src, current):
+    # A context cannot exceed its window; >200k used => the window is the 1M variant.
+    if window == WIN_BASE and used > WIN_BASE:
+        window, src = WIN_1M, src + "+used>200k"
+    return window, src, current
 
 
 def read(transcript):
@@ -49,12 +121,10 @@ def read(transcript):
             c = m.get("content", "")
             if isinstance(c, list):
                 c = " ".join(x.get("text", "") if isinstance(x, dict) else str(x) for x in c)
-            # ONLY trust "Set model to" inside a real /model command-stdout block,
-            # never in ordinary message prose.
-            if isinstance(c, str) and "local-command-stdout" in c:
-                mm = re.search(r"Set model to ([^\s<]+)", c)
-                if mm:
-                    set_model = mm.group(1)  # last wins = current
+            if isinstance(c, str):
+                pm = parse_set_model(c)
+                if pm:
+                    set_model = pm   # last wins = current
     return usage, msg_model, set_model, cwd
 
 
@@ -95,23 +165,13 @@ def main():
         print("no usage block found", file=sys.stderr); sys.exit(1)
     used = usage.get("input_tokens", 0) + usage.get("cache_creation_input_tokens", 0) + usage.get("cache_read_input_tokens", 0)
 
-    # tier 1: /model switch log (exact, has variant) ; else base id from message.model
-    current = set_model or msg_model
-    base = (set_model or msg_model or "").replace("[1m]", "")
-
-    if set_model is not None:                         # tier 1
-        window, src = (WIN_1M if set_model.endswith("[1m]") else WIN_BASE), "model-log"
-    else:
-        used1m = project_used_1m(cwd, base)           # tier 2
-        if used1m is True:
-            window, src, current = WIN_1M, "lastModelUsage", base + "[1m]"
-        elif used1m is None:
-            window, src = WIN_BASE, "lookup?"         # tier 3 (ambiguous / unknown)
-        else:
-            window, src = WIN_BASE, "base-default"
+    base = (msg_model or "").replace("[1m]", "")
+    lmu_1m = None if set_model is not None else project_used_1m(cwd, base)
+    window, src, current = resolve(used, set_model, msg_model, lmu_1m)
 
     pct = used / window * 100
-    note = "" if src in ("model-log", "lastModelUsage") else f"  (window={src} — not measured)"
+    measured = src.split("+")[0] in ("model-log", "lastModelUsage") or "used>200k" in src
+    note = "" if measured else f"  (window={src} — not measured)"
     print(f"{used:,} / {window:,} ({pct:.1f}%)  model={current or '?'}  [src:{src}]{note}")
 
 
