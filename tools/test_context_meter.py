@@ -91,6 +91,58 @@ class ParseSetModel(unittest.TestCase):
                          "claude-opus-4-8[1m]")
 
 
+class StripSystemReminders(unittest.TestCase):
+    def test_plain_untouched(self):
+        self.assertEqual(cm.strip_system_reminders("align"), "align")
+
+    def test_strips_leading_reminder(self):
+        self.assertEqual(
+            cm.strip_system_reminders("<system-reminder>Message sent at Fri X</system-reminder>\ncommit"),
+            "commit")
+
+    def test_strips_multiple_reminders(self):
+        s = "<system-reminder>a</system-reminder>\n<system-reminder>b</system-reminder>\nhi"
+        self.assertEqual(cm.strip_system_reminders(s), "hi")
+
+    def test_reminder_only_becomes_empty(self):
+        self.assertEqual(cm.strip_system_reminders("<system-reminder>nudge</system-reminder>"), "")
+
+    def test_command_stdout_not_a_reminder(self):
+        s = "<local-command-stdout>Set model to claude-opus-4-8</local-command-stdout>"
+        self.assertEqual(cm.strip_system_reminders(s), s)
+
+
+class IsUserPrompt(unittest.TestCase):
+    def up(self, content, tur=False):
+        o = {"type": "user", "message": {"role": "user", "content": content}}
+        if tur:
+            o["toolUseResult"] = {"x": 1}
+        return o
+
+    def test_plain_prompt(self):
+        self.assertTrue(cm.is_user_prompt(self.up("align")))
+
+    def test_reminder_wrapped_prompt(self):
+        # The dropped-turn bug: a real prompt prefixed with a 'Message sent at' reminder.
+        self.assertTrue(cm.is_user_prompt(
+            self.up("<system-reminder>Message sent at Fri 2026-06-12 22:09 UTC.</system-reminder>\ncommit")))
+
+    def test_reminder_only_not_a_prompt(self):
+        self.assertFalse(cm.is_user_prompt(self.up("<system-reminder>some injected nudge</system-reminder>")))
+
+    def test_command_stdout_not_a_prompt(self):
+        self.assertFalse(cm.is_user_prompt(self.up(block("Set model to claude-opus-4-8[1m]"))))
+
+    def test_tool_result_not_a_prompt(self):
+        self.assertFalse(cm.is_user_prompt(self.up([{"type": "tool_result", "content": "x"}], tur=True)))
+
+    def test_text_list_is_a_prompt(self):
+        self.assertTrue(cm.is_user_prompt(self.up([{"type": "text", "text": "hi"}])))
+
+    def test_assistant_not_a_prompt(self):
+        self.assertFalse(cm.is_user_prompt({"type": "assistant", "message": {"role": "assistant", "content": "x"}}))
+
+
 class WindowForModel(unittest.TestCase):
     def test_raw_1m_suffix(self):
         self.assertEqual(cm.window_for_model("claude-opus-4-8[1m]"), M1)
@@ -261,6 +313,36 @@ class ReadIntegration(unittest.TestCase):
         usage, boundaries, msg_model, set_model, cwd = cm.read(path)
         self.assertEqual(set_model, "claude-opus-4-8")
         self.assertEqual(cm.resolve(cm.tokens(usage), set_model, msg_model, None)[0], MB)
+
+
+class BurnStats(unittest.TestCase):
+    def test_no_completed_turn(self):
+        self.assertEqual(cm.burn_stats([], 5), (None, None))
+        self.assertEqual(cm.burn_stats([100], 5), (None, None))
+
+    def test_single_turn_avg_equals_last(self):
+        # One delta available -> avg == last (no smoothing possible yet).
+        self.assertEqual(cm.burn_stats([0, 100], 5), (100, 100.0))
+
+    def test_two_turns(self):
+        # deltas 100, 150 -> last=150, avg=(250-0)/2=125
+        self.assertEqual(cm.burn_stats([0, 100, 250], 5), (150, 125.0))
+
+    def test_window_caps_lookback(self):
+        # boundaries deltas: 100,150,150,200,300 ; window=3 -> last 3 deltas (150,200,300)
+        last, avg = cm.burn_stats([0, 100, 250, 400, 600, 900], 3)
+        self.assertEqual(last, 300)
+        self.assertAlmostEqual(avg, 650 / 3)
+
+    def test_window_larger_than_history(self):
+        # window 5 but only 2 deltas -> average both
+        self.assertEqual(cm.burn_stats([0, 100, 250], 5), (150, 125.0))
+
+    def test_decline_is_negative(self):
+        # context can shrink (a /clear-like drop) -> negative burn
+        last, avg = cm.burn_stats([500, 600, 200], 5)
+        self.assertEqual(last, -400)
+        self.assertEqual(avg, -150.0)
 
 
 class Fmt(unittest.TestCase):

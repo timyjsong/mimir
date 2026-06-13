@@ -38,6 +38,7 @@ tested in test_context_meter.py — run `python3 tools/test_context_meter.py`.
 import json, sys, os, glob, re
 
 WIN_1M, WIN_BASE = 1_000_000, 200_000
+BURN_WINDOW = 5   # turns to average burn over; last turn alone is noisy (66K->3K). Tunable.
 
 def fmt(n):
     """Human K/M token count: 402014 -> '402K', 1_000_000 -> '1M', 1_400_000 -> '1.4M'."""
@@ -58,6 +59,17 @@ ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 
 def strip_ansi(s):
     return ANSI_RE.sub("", s)
+
+
+SYSREMINDER_RE = re.compile(r"^(?:\s*<system-reminder>.*?</system-reminder>)+\s*", re.DOTALL)
+
+
+def strip_system_reminders(s):
+    """Drop leading <system-reminder>...</system-reminder> wrapper(s) so the genuine prompt
+    underneath is visible. The harness prefixes real prompts with a 'Message sent at ...'
+    reminder; without stripping it, the prompt-boundary check mistakes the prompt for
+    non-prompt '<'-wrapped content and silently drops the turn."""
+    return SYSREMINDER_RE.sub("", s).lstrip()
 
 
 def parse_set_model(content):
@@ -128,7 +140,8 @@ def is_user_prompt(o):
     if isinstance(c, list):
         return not any(isinstance(b, dict) and b.get("type") == "tool_result" for b in c)
     if isinstance(c, str):
-        return not c.lstrip().startswith("<")   # exclude <local-command-stdout> etc.
+        c = strip_system_reminders(c)            # a genuine prompt may be wrapped in a leading reminder
+        return bool(c) and not c.startswith("<")  # else <local-command-stdout> etc. (empty == reminder-only)
     return False
 
 
@@ -183,6 +196,22 @@ def project_used_1m(cwd, base):
     return False if has_base else None
 
 
+def burn_stats(boundaries, window):
+    """Per-turn context growth from the prompt boundaries: (last_turn_delta, rolling_avg).
+
+    rolling_avg = mean of the last `window` completed turns' deltas (telescoped:
+    (boundaries[-1] - boundaries[-1-k]) / k, where k = turns actually available). The
+    average is the planning-grade rate; the last delta alone is too noisy to estimate on.
+    Returns (None, None) with < 2 boundaries — no completed turn yet.
+    """
+    if len(boundaries) < 2:
+        return None, None
+    last = boundaries[-1] - boundaries[-2]
+    k = min(window, len(boundaries) - 1)
+    avg = (boundaries[-1] - boundaries[-1 - k]) / k
+    return last, avg
+
+
 def main():
     args = sys.argv[1:]
     if not args:
@@ -200,8 +229,7 @@ def main():
     if not usage:
         print("no usage block found", file=sys.stderr); sys.exit(1)
     used = tokens(usage)
-    # burn = growth of the most recently COMPLETED turn (last two prompt boundaries).
-    burn = boundaries[-1] - boundaries[-2] if len(boundaries) >= 2 else None
+    last_burn, avg_burn = burn_stats(boundaries, BURN_WINDOW)
 
     base = (msg_model or "").replace("[1m]", "")
     lmu_1m = None if set_model is not None else project_used_1m(cwd, base)
@@ -209,7 +237,13 @@ def main():
 
     pct = used / window * 100
     disp = (current or "?").replace("[1m]", "").removeprefix("claude-")
-    burn_str = "" if burn is None else f"  burn={'+' if burn >= 0 else '-'}{fmt(abs(burn))}"
+    if last_burn is None:
+        burn_str = ""
+    else:
+        sgn = lambda x: f"{'+' if x >= 0 else '-'}{fmt(abs(x))}"
+        burn_str = f"  burn {sgn(last_burn)}"                      # line-1 fact: the last turn's actual burn
+        if min(BURN_WINDOW, len(boundaries) - 1) >= 2:            # >1 turn averaged -> emit the smoothed rate
+            burn_str += f"  avg ~{sgn(round(avg_burn))}/turn"     # projection basis for the cost: line
     measured = src.split("+")[0] in ("model-log", "lastModelUsage") or "used>200k" in src
     note = "" if measured else f"  (window={src} — not measured)"
     print(f"{fmt(used)} / {fmt(window)} ({pct:.1f}%)  model={disp}{burn_str}  [src:{src}]{note}")
