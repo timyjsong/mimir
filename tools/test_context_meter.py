@@ -345,6 +345,55 @@ class BurnStats(unittest.TestCase):
         self.assertEqual(avg, -150.0)
 
 
+class ParseThreshold(unittest.TestCase):
+    def test_percent(self):
+        self.assertEqual(cm.parse_threshold("50%"), ("pct", 50.0))
+
+    def test_percent_fractional(self):
+        self.assertEqual(cm.parse_threshold("62.5%"), ("pct", 62.5))
+
+    def test_abs_k(self):
+        self.assertEqual(cm.parse_threshold("200K"), ("abs", 200_000))
+
+    def test_abs_k_lower(self):
+        self.assertEqual(cm.parse_threshold("200k"), ("abs", 200_000))
+
+    def test_abs_m(self):
+        self.assertEqual(cm.parse_threshold("1M"), ("abs", 1_000_000))
+
+    def test_abs_raw_tokens(self):
+        self.assertEqual(cm.parse_threshold("200000"), ("abs", 200_000))
+
+    def test_garbage_defaults_to_50pct(self):
+        self.assertEqual(cm.parse_threshold("nonsense"), ("pct", 50.0))
+
+    def test_empty_defaults_to_50pct(self):
+        self.assertEqual(cm.parse_threshold(""), ("pct", 50.0))
+        self.assertEqual(cm.parse_threshold(None), ("pct", 50.0))
+
+
+class InSurfaceZone(unittest.TestCase):
+    def test_pct_over(self):
+        self.assertTrue(cm.in_surface_zone(600_000, 1_000_000, "50%"))   # 60% >= 50
+
+    def test_pct_under(self):
+        self.assertFalse(cm.in_surface_zone(400_000, 1_000_000, "50%"))  # 40% < 50
+
+    def test_pct_exact_boundary_is_surface(self):
+        self.assertTrue(cm.in_surface_zone(500_000, 1_000_000, "50%"))   # at threshold -> surface
+
+    def test_abs_over(self):
+        self.assertTrue(cm.in_surface_zone(250_000, 1_000_000, "200K"))
+
+    def test_abs_under(self):
+        self.assertFalse(cm.in_surface_zone(150_000, 1_000_000, "200K"))
+
+    def test_abs_independent_of_window(self):
+        # absolute threshold compares tokens, not %, so a big window doesn't change the call
+        self.assertTrue(cm.in_surface_zone(210_000, 1_000_000, "200K"))
+        self.assertFalse(cm.in_surface_zone(190_000, 200_000, "200K"))
+
+
 class Fmt(unittest.TestCase):
     def test_k(self):
         self.assertEqual(cm.fmt(402014), "402K")

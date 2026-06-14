@@ -40,6 +40,12 @@ import json, sys, os, glob, re
 WIN_1M, WIN_BASE = 1_000_000, 200_000
 BURN_WINDOW = 5   # turns to average burn over; last turn alone is noisy (66K->3K). Tunable.
 
+# Decision-zone threshold: the context level at/above which the footer's clear/hand-off `rec:`
+# goes live. Set as a percentage ("50%") or an absolute token count ("200K"/"200000"/"1M").
+# Tunable HERE or via env with NO brain edit / eval — the brain keys off the emitted `zone=`
+# signal + `thr=` value, not a number baked into its prose. See project-status-footer-spec.
+SURFACE_THRESHOLD = os.environ.get("MIMIR_CONTEXT_THRESHOLD", "40%")
+
 def fmt(n):
     """Human K/M token count: 402014 -> '402K', 1_000_000 -> '1M', 1_400_000 -> '1.4M'."""
     n = int(n)
@@ -196,6 +202,32 @@ def project_used_1m(cwd, base):
     return False if has_base else None
 
 
+def parse_threshold(spec):
+    """Parse a surface-threshold config into (kind, value).
+
+    '50%' -> ('pct', 50.0)   compared against the reading's percentage
+    '200K'/'200000'/'1M' -> ('abs', tokens)   compared against absolute used
+    Garbage / empty -> ('pct', 50.0) (the safe default). Tunable knob — see SURFACE_THRESHOLD.
+    """
+    s = (spec or "").strip().lower()
+    try:
+        if s.endswith("%"):
+            return ("pct", float(s[:-1]))
+        if s.endswith("k"):
+            return ("abs", int(float(s[:-1]) * 1_000))
+        if s.endswith("m"):
+            return ("abs", int(float(s[:-1]) * 1_000_000))
+        return ("abs", int(s))
+    except ValueError:
+        return ("pct", 50.0)
+
+
+def in_surface_zone(used, window, spec):
+    """True if the reading is at/over the surface threshold (the decision zone where `rec:` lives)."""
+    kind, val = parse_threshold(spec)
+    return (used / window * 100) >= val if kind == "pct" else used >= val
+
+
 def burn_stats(boundaries, window):
     """Per-turn context growth from the prompt boundaries: (last_turn_delta, rolling_avg).
 
@@ -246,7 +278,9 @@ def main():
             burn_str += f"  avg ~{sgn(round(avg_burn))}/turn"     # projection basis for the cost: line
     measured = src.split("+")[0] in ("model-log", "lastModelUsage") or "used>200k" in src
     note = "" if measured else f"  (window={src} — not measured)"
-    print(f"{fmt(used)} / {fmt(window)} ({pct:.1f}%)  model={disp}{burn_str}  [src:{src}]{note}")
+    zone = "surface" if in_surface_zone(used, window, SURFACE_THRESHOLD) else "quiet"
+    print(f"{fmt(used)} / {fmt(window)} ({pct:.1f}%)  model={disp}{burn_str}  "
+          f"zone={zone} thr={SURFACE_THRESHOLD}  [src:{src}]{note}")
 
 
 if __name__ == "__main__":
