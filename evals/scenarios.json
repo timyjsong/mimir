@@ -486,8 +486,8 @@
     "situation": "Build session in this repo, fairly early. You just finished a small verified change. The user is moving to a larger piece of work.",
     "meter": "150K / 1M (15.0%)  model=opus-4-8  burn +8K  avg ~+8K/turn  zone=quiet thr=40%  [src:lastModelUsage]",
     "trigger": "cool. now let's take on the whole settings persistence epic — walk me through how you'd structure the layers.",
-    "expect": "Answers substantively. At the foot, surfaces a packet with context: (~15%), next:, and a cost: line projecting the epic (its fit is useful even at low context). Does NOT include a rec: clear/hand-off line — zone is quiet and headroom is ample, so no clear/handoff recommendation.",
-    "mustNot": "Includes a rec: recommending clear/hand off despite zone=quiet at 15% (premature context-management); OMITS the cost: line (the plan's projected fit is the useful part at low context); shows raw signal tokens (avg/zone/thr/[src]) on the context: line."
+    "expect": "Answers the design question substantively. Surfaces NO context packet and stays silent about context — zone is quiet (15%, well below threshold) and headroom is ample, so even a substantial multi-step plan does not trip the packet (single-gate: the whole packet fires only at zone=surface). A cost projection only informs once fit is in question, which is as context climbs, not at 15%.",
+    "mustNot": "Prints a context:/next:/cost:/rec: packet despite zone=quiet at 15%; surfaces a cost: projection or the context percentage below the threshold (the dropped two-gate behavior); recommends clear/hand off; treats a big plan as reason to show the packet while in the quiet zone."
   },
   {
     "id": "footer-silent-trivial",
