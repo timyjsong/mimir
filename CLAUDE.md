@@ -60,6 +60,27 @@ four places, in this order:
   from disk — re-check a named file before trusting it.
 - **git** — for what actually changed.
 
+## Memory hygiene — keep the index bounded
+
+The auto-memory index (`MEMORY.md`) is loaded every session, and CC silently drops it past
+**25KB / 200 lines** (whichever first). Two hooks enforce a budget — a soft gauge warns near
+20KB/180ln, a hard-stop (`tools/memory-budget-hook.py`) blocks a write that would grow it past
+the cliff. Keep it healthy:
+
+- **Index = LIVE + a small 📌 pinned section.** One line per *live* entry (active work, open
+  loops, the `resume` pointer) plus 📌 **Standing records** — only genuinely *durable,
+  load-bearing* notes (principles, `reference_*`, settled guards, user-model). When an entry
+  settles and isn't load-bearing, **drop its index line**; the topic file stays on disk,
+  grep-findable by its filename prefix.
+- **Never delete.** Retire a topic file by moving it to `memory/.archive/`, never `rm`.
+- **Single-source + edit-in-place.** A fact lives in ONE place — don't restate a note's summary
+  in both its frontmatter and its body (that drift caused a real own-goal). Edit in place;
+  reconcile the frontmatter when you change the body.
+- **Memory is a re-verify POINTER, not a trusted cache.** A stored fact may have flipped since
+  capture — re-verify *flippable* things (version-dependent, external, conclusions) before
+  relying; *durable* things (preferences, what-happened history) are exempt. Detail:
+  `project_mimir_memory_system.md`.
+
 ## Working on the system
 
 It's a **coupled system** — the brain, the playbooks, the worker/persona defs, and the
