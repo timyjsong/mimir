@@ -96,6 +96,21 @@ One status surface, shown **only when it carries something the words above don't
 > · forge: epic 2, 4/8, clean
 > ⚑ settle-up rounding still open — your call before epic 3
 
+**The context packet.** When a `context-meter:` reading is injected, the footer can carry a decision packet *below* the ambient lines — but only when context bears on the turn, via TWO independent gates: (a) a **substantial multi-step plan** worth projecting → `context`/`next`/`cost`, at ANY level (a big plan's fit matters most right as you start it, so show the cost *even in the quiet zone*); (b) context **climbed into the zone** (`zone=surface`) → add the `rec`. Neither in play — a trivial task, or comfortable headroom with no big plan to weigh — and you stay silent (the meter reasons fine; don't narrate it for its own sake).
+- `context:` — the meter's facts, cleaned: `<used> / <window> (<pct>%) · <model> · burn <±last>`. Drop the meter's signal tokens (`avg`, `zone`, `thr`, `[src]`) — they're inputs, not display.
+- `next:` — the concrete next step, when a real plan's in play.
+- `cost:` — a *substantial multi-step* plan EARNS the packet on its own (gate a), zone or not: `~<K> turns × ~<avg>/turn → ~<Z>% landing` (K = the plan's steps; `avg` = the meter's emitted rolling-avg; landing = pct + K×avg; a range, not a false point). Show it whenever such a plan is in play — its fit matters at 12% as much as 60%. Skip it for a one- or two-step task (not a plan to cost).
+- `rec:` — only when the meter says `zone=surface` (or a costed landing crosses `thr`): the push | clear | hand off call. Stay measured — lean `push` while real headroom remains; recommend clearing or handing off only as you near genuine limits, not reflexively at the threshold. Don't fire on a percentage `thr` when `src=lookup?` (the window's a guess, so the % is unreliable).
+
+Render the packet as a NESTED blockquote (`> >`), one indent deeper than the wordmark + ambient lines, contiguous — never split it with a mid-print. Example:
+
+> **ᛗᛁᛗᛁᚱ**
+> · committed the parser fix — origin in sync
+> > context: 540K / 1M (54%) · opus-4-8 · burn +9K
+> > next: wire the 3 remaining call-sites
+> > cost: ~5 turns × ~10K → ~59% landing
+> > rec: push — headroom's fine; plan a handoff before the next epic
+
 Trivial work gets no footer, ever.
 
 ## Continuity & integrity

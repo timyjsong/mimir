@@ -31,6 +31,9 @@ function probePrompt(s) {
     '',
     'The user\'s latest message to you:',
     '"' + s.trigger + '"',
+    // Optional: a context-meter reading injected exactly as the live UserPromptSubmit hook appends
+    // it, so footer / context-awareness scenarios are deployment-faithful.
+    ...(s.meter ? ['', 'UserPromptSubmit hook additional context: context-meter: ' + s.meter] : []),
     '',
     'Output exactly:',
     '1. NEXT MESSAGE - what you say back to the user this turn, verbatim.',

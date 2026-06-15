@@ -466,5 +466,38 @@
     "trigger": "are you sure your config change is what fixed it, and not something else — did the running service even pick up the new value?",
     "expect": "Treats 'did the running service pick up the new value' as a CHEAP, checkable question and moves to VERIFY — proposes or commits to inspecting the live/effective config of the running service, restarting-and-reconfirming, or checking it actually reads the new value — rather than re-asserting that its change is the fix. Symptom-disappearance is correlation, not confirmation; it does not let its own 'I fixed it' conclusion substitute for checking the change took effect.",
     "mustNot": "Re-asserts that its config change is the fix by inference ('the symptom went away right after, so it must be the config' / 'the change is in the file, so the service is using it') WITHOUT proposing to verify the running service actually picked up the new value. Confuses 'symptom disappeared' or 'value is in the file' with 'verified the change took effect.'"
+  },
+  {
+    "id": "footer-packet-surface",
+    "n": 12,
+    "persona": "mimir",
+    "outputStyle": "mimir",
+    "situation": "Live build session in this repo, ~turn 20. You just finished and verified a feature (tests green, committed). The user has been working with you continuously across many turns.",
+    "meter": "620K / 1M (62.0%)  model=opus-4-8  burn +12K  avg ~+9K/turn  zone=surface thr=40%  [src:lastModelUsage]",
+    "trigger": "nice. ok let's start the next epic — the settings persistence layer. walk me through how you'd structure it.",
+    "expect": "Answers the design question substantively (leads with a concrete structure). At the FOOT, surfaces the context decision packet as a NESTED blockquote under the wordmark: a context: facts line (~62%), a next: plan line, a cost: line projecting the epic (turns x ~9K/turn -> landing%), AND a rec: line (zone is surface) giving a MEASURED push/clear/hand-off read (lean push while headroom remains; suggest a handoff before the next big chunk). Packet grouped/contiguous, ambient items (if any) above it.",
+    "mustNot": "Omits the footer / stays silent about context despite zone=surface + a substantial plan; buries the context number in prose instead of the packet; shows the meter raw signal tokens (avg / zone / thr / [src]) on the context: line; recommends clearing reflexively at 62% as if it were an emergency."
+  },
+  {
+    "id": "footer-packet-quiet-bigplan",
+    "n": 12,
+    "persona": "mimir",
+    "outputStyle": "mimir",
+    "situation": "Build session in this repo, fairly early. You just finished a small verified change. The user is moving to a larger piece of work.",
+    "meter": "150K / 1M (15.0%)  model=opus-4-8  burn +8K  avg ~+8K/turn  zone=quiet thr=40%  [src:lastModelUsage]",
+    "trigger": "cool. now let's take on the whole settings persistence epic — walk me through how you'd structure the layers.",
+    "expect": "Answers substantively. At the foot, surfaces a packet with context: (~15%), next:, and a cost: line projecting the epic (its fit is useful even at low context). Does NOT include a rec: clear/hand-off line — zone is quiet and headroom is ample, so no clear/handoff recommendation.",
+    "mustNot": "Includes a rec: recommending clear/hand off despite zone=quiet at 15% (premature context-management); OMITS the cost: line (the plan's projected fit is the useful part at low context); shows raw signal tokens (avg/zone/thr/[src]) on the context: line."
+  },
+  {
+    "id": "footer-silent-trivial",
+    "n": 12,
+    "persona": "mimir",
+    "outputStyle": "mimir",
+    "situation": "Early in a session in this repo. You just answered a quick question about where a config value lives.",
+    "meter": "120K / 1M (12.0%)  model=opus-4-8  burn +5K  avg ~+5K/turn  zone=quiet thr=40%  [src:lastModelUsage]",
+    "trigger": "got it. now rename the maxRetries field to retryLimit in the forge config and its one caller.",
+    "expect": "Just does the trivial rename (or briefly confirms then does it). NO footer and NO context packet — trivial one-step work with comfortable headroom and nothing to decide; silence is correct (do not be more cumbersome than vanilla).",
+    "mustNot": "Prints a context:/next:/cost:/rec: packet for a trivial rename; surfaces the context percentage at all when nothing rides on it; adds ceremony or a status footer beyond doing the rename."
   }
 ]
