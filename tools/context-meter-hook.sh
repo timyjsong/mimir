@@ -52,15 +52,20 @@ if [ -n "$cwd" ]; then
   memfile="$HOME/.claude/projects/$(printf '%s' "$cwd" | sed 's#/#-#g')/memory/MEMORY.md"
   if [ -f "$memfile" ]; then
     bytes="$(wc -c < "$memfile" 2>/dev/null || echo 0)"
+    lines="$(wc -l < "$memfile" 2>/dev/null || echo 0)"
     budget="${MIMIR_MEMORY_THRESHOLD:-20000}"
+    lbudget="${MIMIR_MEMORY_LINEBUDGET:-180}"
     if [ "$budget" -gt 0 ] 2>/dev/null && [ "$bytes" -gt 0 ] 2>/dev/null; then
       kb="$(awk "BEGIN{printf \"%.1f\", $bytes/1024}" 2>/dev/null)"
       bk="$(awk "BEGIN{printf \"%.0f\", $budget/1024}" 2>/dev/null)"
       pct=$(( bytes * 100 / budget ))
-      if [ "$bytes" -ge "$budget" ]; then
-        memline="memory-meter: index OVER (${kb}K / ${bk}K) — CC silently drops MEMORY.md past ~25K; consolidate settled lines to cold before adding"
+      lpct=$(( lines * 100 / lbudget ))
+      [ "$lpct" -gt "$pct" ] && pct="$lpct"
+      stat="${kb}K/${bk}K · ${lines}/${lbudget}ln"
+      if [ "$bytes" -ge "$budget" ] || [ "$lines" -ge "$lbudget" ]; then
+        memline="memory-meter: index OVER (${stat}) — CC silently drops MEMORY.md past 25K/200ln; consolidate settled lines to cold before adding"
       elif [ "$pct" -ge 80 ]; then
-        memline="memory-meter: index ${pct}% (${kb}K / ${bk}K) — consolidate the longest settled lines before adding"
+        memline="memory-meter: index ${pct}% (${stat}) — consolidate the longest settled lines before adding"
       fi
     fi
   fi
