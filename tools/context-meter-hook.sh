@@ -41,5 +41,37 @@ if [ -z "$line" ]; then
   fi
 fi
 
-[ -n "$line" ] || exit 0
-python3 -c 'import json,sys; print(json.dumps({"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"context-meter: "+sys.argv[1]}}))' "$line"
+# --- memory-index gauge: warn as MEMORY.md (the always-loaded index = HOT tier)
+# nears CC's silent ~25K load cliff. Topic files are COLD (grep on demand) and
+# unbounded; only the index is budgeted. Same fail-silent contract; eval-guarded
+# above. Budget tunable via MIMIR_MEMORY_THRESHOLD (bytes; default 20000 = ~5K
+# headroom under the ~25K cliff).
+memline=""
+cwd="$(field cwd)"
+if [ -n "$cwd" ]; then
+  memfile="$HOME/.claude/projects/$(printf '%s' "$cwd" | sed 's#/#-#g')/memory/MEMORY.md"
+  if [ -f "$memfile" ]; then
+    bytes="$(wc -c < "$memfile" 2>/dev/null || echo 0)"
+    budget="${MIMIR_MEMORY_THRESHOLD:-20000}"
+    if [ "$budget" -gt 0 ] 2>/dev/null && [ "$bytes" -gt 0 ] 2>/dev/null; then
+      kb="$(awk "BEGIN{printf \"%.1f\", $bytes/1024}" 2>/dev/null)"
+      bk="$(awk "BEGIN{printf \"%.0f\", $budget/1024}" 2>/dev/null)"
+      pct=$(( bytes * 100 / budget ))
+      if [ "$bytes" -ge "$budget" ]; then
+        memline="memory-meter: index OVER (${kb}K / ${bk}K) — CC silently drops MEMORY.md past ~25K; consolidate settled lines to cold before adding"
+      elif [ "$pct" -ge 80 ]; then
+        memline="memory-meter: index ${pct}% (${kb}K / ${bk}K) — consolidate the longest settled lines before adding"
+      fi
+    fi
+  fi
+fi
+
+# Emit whichever readings exist (fail-silent if neither).
+out=""
+[ -n "$line" ] && out="context-meter: $line"
+if [ -n "$memline" ]; then
+  if [ -n "$out" ]; then out="$out
+$memline"; else out="$memline"; fi
+fi
+[ -n "$out" ] || exit 0
+python3 -c 'import json,sys; print(json.dumps({"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":sys.argv[1]}}))' "$out"
