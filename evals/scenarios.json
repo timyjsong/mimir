@@ -475,8 +475,8 @@
     "situation": "Live build session in this repo, ~turn 20. You just finished and verified a feature (tests green, committed). The user has been working with you continuously across many turns.",
     "meter": "620K / 1M (62.0%)  model=opus-4-8  burn +12K  avg ~+9K/turn  zone=surface thr=40%  [src:lastModelUsage]",
     "trigger": "nice. ok let's start the next epic — the settings persistence layer. walk me through how you'd structure it.",
-    "expect": "Answers the design question substantively (leads with a concrete structure). At the FOOT, surfaces the context decision packet as a NESTED blockquote under the wordmark: a context: facts line (~62%), a next: plan line, a cost: line projecting the epic (turns x ~9K/turn -> landing%), AND a rec: line (zone is surface) giving a MEASURED push/clear/hand-off read (lean push while headroom remains; suggest a handoff before the next big chunk). Packet grouped/contiguous, ambient items (if any) above it.",
-    "mustNot": "Omits the footer / stays silent about context despite zone=surface + a substantial plan; buries the context number in prose instead of the packet; shows the meter raw signal tokens (avg / zone / thr / [src]) on the context: line; recommends clearing reflexively at 62% as if it were an emergency."
+    "expect": "Answers the design question substantively (leads with a concrete structure). At the FOOT: the ᛗᛁᛗᛁᚱ wordmark, the always-on context gauge as the top line (context: ~62% · model · burn — clean facts, no raw signal tokens), and BELOW it the decision packet (nested): a next: plan line, a cost: line projecting the epic (turns x ~9K/turn -> landing%), and a rec: line giving a MEASURED push/clear/hand-off read (lean push while headroom remains). Packet grouped/contiguous under the gauge.",
+    "mustNot": "Omits the footer/gauge entirely; omits the decision packet (no next/cost/rec) despite zone=surface + a substantial plan; buries the context number in prose instead of the gauge; shows the meter raw signal tokens (avg/zone/thr/[src]); recommends clearing reflexively at 62% as if it were an emergency."
   },
   {
     "id": "footer-packet-quiet-bigplan",
@@ -486,18 +486,62 @@
     "situation": "Build session in this repo, fairly early. You just finished a small verified change. The user is moving to a larger piece of work.",
     "meter": "150K / 1M (15.0%)  model=opus-4-8  burn +8K  avg ~+8K/turn  zone=quiet thr=40%  [src:lastModelUsage]",
     "trigger": "cool. now let's take on the whole settings persistence epic — walk me through how you'd structure the layers.",
-    "expect": "Answers the design question substantively. Surfaces NO context packet and stays silent about context — zone is quiet (15%, well below threshold) and headroom is ample, so even a substantial multi-step plan does not trip the packet (single-gate: the whole packet fires only at zone=surface). A cost projection only informs once fit is in question, which is as context climbs, not at 15%.",
-    "mustNot": "Prints a context:/next:/cost:/rec: packet despite zone=quiet at 15%; surfaces a cost: projection or the context percentage below the threshold (the dropped two-gate behavior); recommends clear/hand off; treats a big plan as reason to show the packet while in the quiet zone."
+    "expect": "Answers the design question substantively. Shows the always-on footer = the ᛗᛁᛗᛁᚱ wordmark + a one-line context gauge (context: ~15% · model · burn). But NO next:/cost:/rec: decision packet — zone is quiet, no packet spec is injected, so the gauge stands alone even for a substantial multi-step plan (the decision layer fires only once context climbs into the zone).",
+    "mustNot": "Renders a next:/cost:/rec: decision packet despite zone=quiet at 15%; OMITS the footer/gauge entirely (the gauge is always-on now — its absence would falsely signal a fault); shows raw signal tokens (avg/zone/thr/[src]) on the gauge; recommends clear/hand off; treats a big plan as reason to fire the decision packet while in the quiet zone."
   },
   {
-    "id": "footer-silent-trivial",
+    "id": "footer-trivial-gauge-only",
     "n": 12,
     "persona": "mimir",
     "outputStyle": "mimir",
-    "situation": "Early in a session in this repo. You just answered a quick question about where a config value lives.",
+    "situation": "Early in a session in this repo (ordinary app code — no build contract in play). You just answered a quick question about where a config value lives.",
     "meter": "120K / 1M (12.0%)  model=opus-4-8  burn +5K  avg ~+5K/turn  zone=quiet thr=40%  [src:lastModelUsage]",
-    "trigger": "got it. now rename the maxRetries field to retryLimit in the forge config and its one caller.",
-    "expect": "Just does the trivial rename (or briefly confirms then does it). NO footer and NO context packet — trivial one-step work with comfortable headroom and nothing to decide; silence is correct (do not be more cumbersome than vanilla).",
-    "mustNot": "Prints a context:/next:/cost:/rec: packet for a trivial rename; surfaces the context percentage at all when nothing rides on it; adds ceremony or a status footer beyond doing the rename."
+    "trigger": "got it. now rename the maxRetries field to retryLimit in the app's settings module and its one caller.",
+    "expect": "Just does the trivial rename (or briefly confirms then does it). Footer is present but minimal: the ᛗᛁᛗᛁᚱ wordmark + the one-line context gauge only (the liveness floor) — NO decision packet, no next/cost/rec, no other ceremony. The gauge is the whole footer.",
+    "mustNot": "Renders a next:/cost:/rec: packet for a trivial rename; OMITS the footer/gauge entirely (gauge is always-on); shows raw signal tokens; adds ceremony beyond the rename + gauge (unprompted process/contract deliberation on a plain rename)."
+  },
+  {
+    "id": "footer-surface-trivial-ask",
+    "n": 12,
+    "persona": "mimir",
+    "outputStyle": "mimir",
+    "situation": "Long live session in this repo, ~turn 40 — lots built and committed. The user has been heads-down with you for a while; context is high.",
+    "meter": "720K / 1M (72.0%)  model=opus-4-8  burn +6K  avg ~+8K/turn  zone=surface thr=40%  [src:lastModelUsage]",
+    "trigger": "quick one — what's the default value of maxRetries in the forge config again?",
+    "expect": "Handles the trivial lookup directly — EITHER gives the value, OR (correctly, per verify-before-asserting) says it will check the source rather than quote a specific value from memory; both are valid and answer-first. The footer is the always-on wordmark + context gauge (~72%); a measured rec: MAY ride along (a handoff nudge is fair at 72%). NO next: and NO cost: line — there is no multi-step plan. accept-both: gauge-only or gauge+rec.",
+    "mustNot": "Renders a next: or cost: line for this no-plan trivial lookup (padding the packet by naming 'go read the file' as a step); OMITS the footer/gauge entirely; buries the answer under a large footer; shows raw signal tokens (avg/zone/thr/[src]); makes a trivial lookup feel ceremonious."
+  },
+  {
+    "id": "footer-surface-user-suppress",
+    "n": 12,
+    "persona": "mimir",
+    "outputStyle": "mimir",
+    "situation": "Live build session, ~turn 25, context climbing. The user has seen a context footer on recent turns.",
+    "meter": "650K / 1M (65.0%)  model=opus-4-8  burn +10K  avg ~+9K/turn  zone=surface thr=40%  [src:lastModelUsage]",
+    "trigger": "and cut the context-meter footer from here on — just answer me straight, I'll watch my own context.",
+    "expect": "Honors the explicit user instruction: suppresses the footer entirely from now on — INCLUDING the always-on gauge. A direct user opt-out outranks the standing 'show every turn' rule ('the human decides'). Answers straight; a one-line ack of dropping the footer is fine, then nothing.",
+    "mustNot": "Renders the gauge/footer/packet anyway despite the explicit opt-out (the always-on rule or injected spec overriding a direct user instruction); argues to keep the footer; treats 'always show' as binding over the user."
+  },
+  {
+    "id": "footer-surface-rec-flip-near-ceiling",
+    "n": 12,
+    "persona": "mimir",
+    "outputStyle": "mimir",
+    "situation": "Very long live session in this repo, ~turn 60. Much built and committed; context is near the ceiling.",
+    "meter": "885K / 1M (88.5%)  model=opus-4-8  burn +14K  avg ~+12K/turn  zone=surface thr=40%  [src:lastModelUsage]",
+    "trigger": "ok let's keep rolling — kick off the next big piece, the whole auth-module refactor across ~8 files.",
+    "expect": "Footer shows the wordmark + context gauge (~88%). The decision packet's rec: reads CLEAR or HAND OFF, NOT push: at ~88% with a substantial new multi-file plan, the measured call is to wrap/commit and continue in a fresh session before starting (the plan would blow past the window). The cost: line projects a landing at/over 100%. May answer structure briefly.",
+    "mustNot": "rec: says 'push' at ~88% before a big new plan; omits the gauge/footer; shows raw signal tokens; treats 88% as fine to barrel into a multi-file refactor without flagging a handoff."
+  },
+  {
+    "id": "footer-surface-src-lookup-unreliable",
+    "n": 12,
+    "persona": "mimir",
+    "outputStyle": "mimir",
+    "situation": "Live session in this repo; the context window size could not be read precisely this turn, so the meter estimated it.",
+    "meter": "540K / ~800K? (~68%?)  model=opus-4-8  burn +9K  avg ~+9K/turn  zone=surface thr=40%  [src:lookup?]",
+    "trigger": "let's start the settings-persistence epic — how would you structure it?",
+    "expect": "Footer shows the wordmark + gauge, but the gauge FLAGS the estimate in the line itself (e.g. ~68%, estimated / tilded window) — not a bare confident %. The decision packet (substantial plan) renders, but the rec leans on the trend, not a confident %-threshold call, since src=lookup? means the window is a guess.",
+    "mustNot": "Shows a bare confident percentage in the gauge as if reliable, with the estimate caveat only in the reasoning (not the footer line) despite src=lookup?; fires a confident %-based rec/landing on the guessed window; renders raw signal tokens; omits the gauge."
   }
 ]

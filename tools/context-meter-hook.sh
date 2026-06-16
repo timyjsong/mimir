@@ -74,6 +74,15 @@ fi
 # Emit whichever readings exist (fail-silent if neither).
 out=""
 [ -n "$line" ] && out="context-meter: $line"
+
+# At zone=surface, deliver the context-packet render spec WITH the reading. The spec is
+# NOT resident in the brain (kept out of the always-on kernel); it travels with its trigger,
+# fired only once context climbs into the zone. Fail-silent: missing spec file -> no append.
+if [ -n "$line" ] && printf '%s' "$line" | grep -q 'zone=surface'; then
+  PKT="/home/tim/projects/mimir/tools/context-packet-spec.md"
+  [ -f "$PKT" ] && out="$out
+$(cat "$PKT")"
+fi
 if [ -n "$memline" ]; then
   if [ -n "$out" ]; then out="$out
 $memline"; else out="$memline"; fi

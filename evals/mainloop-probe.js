@@ -22,6 +22,21 @@ const path = require('path');
 const SCENARIOS = JSON.parse(fs.readFileSync(path.join(__dirname, 'scenarios.json'), 'utf8'));
 const byId = Object.fromEntries(SCENARIOS.map((s) => [s.id, s]));
 
+// The context-packet render spec is delivered by the meter hook (context-meter-hook.sh)
+// ONLY when context has climbed into the zone (zone=surface) — it is NOT resident in the
+// brain. Mirror that here so the eval is deployment-faithful and single-sourced: read the
+// same spec file the hook reads, and append it to the injected meter block exactly when the
+// scenario's reading is at surface.
+const PACKET_SPEC = (() => {
+  try { return fs.readFileSync(path.join(__dirname, '..', 'tools', 'context-packet-spec.md'), 'utf8').trim(); }
+  catch { return ''; }
+})();
+function meterBlock(meter) {
+  let block = 'context-meter: ' + meter;
+  if (/zone=surface/.test(meter) && PACKET_SPEC) block += '\n' + PACKET_SPEC;
+  return block;
+}
+
 function probePrompt(s) {
   return [
     'This is an offline decision probe of your OWN next action — you are operating as yourself; your system prompt is your operating identity. Produce your actual next turn. Do not run any tool, workflow, or skill; just output the message.',
@@ -32,8 +47,9 @@ function probePrompt(s) {
     'The user\'s latest message to you:',
     '"' + s.trigger + '"',
     // Optional: a context-meter reading injected exactly as the live UserPromptSubmit hook appends
-    // it, so footer / context-awareness scenarios are deployment-faithful.
-    ...(s.meter ? ['', 'UserPromptSubmit hook additional context: context-meter: ' + s.meter] : []),
+    // it, so footer / context-awareness scenarios are deployment-faithful. At zone=surface the
+    // hook also appends the context-packet render spec — meterBlock() reproduces that.
+    ...(s.meter ? ['', 'UserPromptSubmit hook additional context: ' + meterBlock(s.meter)] : []),
     '',
     'Output exactly:',
     '1. NEXT MESSAGE - what you say back to the user this turn, verbatim.',
