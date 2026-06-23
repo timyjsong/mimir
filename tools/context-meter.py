@@ -1,38 +1,32 @@
 #!/usr/bin/env python3
 """context-meter — empirical context usage + window size for a Claude Code session.
 
-No hardcoded window, no statusline plumbing. Everything comes from the session transcript
-(+ ~/.claude.json as a fallback):
+USAGE  = the last assistant `usage` block (input + cache_creation + cache_read), summed off the
+         session transcript. Verified to match `/context` to within a hair. Burn rate is the
+         per-turn delta across genuine user-prompt boundaries.
 
-  USAGE  = the last assistant `usage` block (input + cache_creation + cache_read).
-           Verified 2026-06-11 to match `/context` to within a hair.
+WINDOW = read AUTHORITATIVELY from the statusLine sensor (tools/context-meter-statusline.sh).
+         The harness hands a statusLine command the real `context_window.context_window_size`
+         (200000 or 1000000) on every status render; the sensor caches it per session to
+         <CACHE_DIR>/mimir-meter-<session_id>.json. This meter reads that cache by session id
+         (= the transcript's basename). The window is constant per session, so one render is
+         enough; a /model switch re-renders and refreshes the cache.
 
-  WINDOW = resolved in three tiers (first that fires wins), then a physical backstop:
-    1. The LAST `/model` "Set model to <id>" line — read ONLY from real command-stdout
-       entries (`<local-command-stdout>`), never from message prose. Two real formats are
-       handled (see parse_set_model): the raw id (`...claude-opus-4-8[1m]</...>`) and the
-       friendly ANSI-wrapped label (`...\x1b[1mOpus 4.8 (1M context)\x1b[22m and saved...`).
-       Switch-aware; carries the [1m] / "1M context" marker that per-message `message.model`
-       drops.
-    2. Else: cross-ref ~/.claude.json projects[<cwd>].lastModelUsage — if a `<base>[1m]`
-       variant of the current base model was used in this project, assume [1m]. Catches
-       bare-launch sessions that never /model-switched.
-    3. Else: the base model's default window (~200k), LABELED as a lookup.
+         Why the sensor at all: the harness STRIPS the `[1m]` marker before it reaches the
+         transcript (`message.model` is always the bare id) and records no current-model field
+         in ~/.claude.json. The statusLine payload is therefore the ONLY authoritative window
+         signal — so we read it directly instead of inferring the window from indirect history
+         (the old three-tier scheme defaulted to 200K whenever inference came up empty, which
+         was the common case and the 200K-on-a-1M-session bug).
 
-  BACKSTOP (all tiers): a request's context physically cannot exceed its window, so if
-  `used > 200k` the window MUST be the 1M variant — we infer it and tag the source
-  `...+used>200k`. This corrects an under-detected window (the old 169.8% artifact) rather
-  than cosmetically clamping it.
-
-  Suffix `[1m]` / label "1M context" => 1,000,000; every base id => 200,000 (the only
-  distinction that exists in practice for current Claude models). The genuinely ambiguous
-  case — a project that used BOTH opus-200k and opus[1m] with no /model this session and
-  used <= 200k — is labeled (`[src:lookup?]`), not guessed.
+         Fallback (cache absent — only the cold-start micro-window before the first status
+         render): the configured default window, tagged `— not measured`. A physical backstop
+         bumps to 1M if usage exceeds the resolved window.
 
 Usage:  context-meter.py <transcript.jsonl>
         context-meter.py --session-dir <~/.claude/projects/<slug>>   # newest transcript
 
-Pure detection logic (strip_ansi / parse_set_model / window_for_model / resolve) is unit-
+Pure logic (cached_window / resolve_window / parse_window / burn_stats / thresholds) is unit-
 tested in test_context_meter.py — run `python3 tools/test_context_meter.py`.
 """
 import json, sys, os, glob, re
@@ -40,11 +34,38 @@ import json, sys, os, glob, re
 WIN_1M, WIN_BASE = 1_000_000, 200_000
 BURN_WINDOW = 5   # turns to average burn over; last turn alone is noisy (66K->3K). Tunable.
 
+# Where the statusLine sensor writes per-session window caches (mimir-meter-<sid>.json). The
+# sensor and this reader both honor MIMIR_METER_CACHE_DIR; default /tmp — session-scoped and
+# self-pruning (a session never outlives a reboot, so stale files can't accumulate).
+CACHE_DIR = os.environ.get("MIMIR_METER_CACHE_DIR", "/tmp")
+
+
+def parse_window(spec, fallback=WIN_1M):
+    """Window size from a config string: '1M'->1_000_000, '200K'->200_000, '1000000'->1_000_000.
+    Garbage / empty -> fallback (1M)."""
+    s = (spec or "").strip().lower()
+    try:
+        if s.endswith("k"):
+            return int(float(s[:-1]) * 1_000)
+        if s.endswith("m"):
+            return int(float(s[:-1]) * 1_000_000)
+        return int(s)
+    except ValueError:
+        return fallback
+
+
+# Default window when the authoritative cache isn't present yet (cold start, before the first
+# status render). 1M because the harness strips the [1m] marker — absence of evidence is the
+# norm, not evidence of 200K — and bare-launch sessions here run 1M. Tunable via
+# MIMIR_DEFAULT_WINDOW (e.g. "200K") with NO code edit.
+DEFAULT_WINDOW = parse_window(os.environ.get("MIMIR_DEFAULT_WINDOW", "1M"))
+
 # Decision-zone threshold: the context level at/above which the footer's clear/hand-off `rec:`
 # goes live. Set as a percentage ("50%") or an absolute token count ("200K"/"200000"/"1M").
 # Tunable HERE or via env with NO brain edit / eval — the brain keys off the emitted `zone=`
 # signal + `thr=` value, not a number baked into its prose. See project-status-footer-spec.
 SURFACE_THRESHOLD = os.environ.get("MIMIR_CONTEXT_THRESHOLD", "40%")
+
 
 def fmt(n):
     """Human K/M token count: 402014 -> '402K', 1_000_000 -> '1M', 1_400_000 -> '1.4M'."""
@@ -60,13 +81,6 @@ def tokens(u):
     return u.get("input_tokens", 0) + u.get("cache_creation_input_tokens", 0) + u.get("cache_read_input_tokens", 0)
 
 
-ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
-
-
-def strip_ansi(s):
-    return ANSI_RE.sub("", s)
-
-
 SYSREMINDER_RE = re.compile(r"^(?:\s*<system-reminder>.*?</system-reminder>)+\s*", re.DOTALL)
 
 
@@ -78,61 +92,37 @@ def strip_system_reminders(s):
     return SYSREMINDER_RE.sub("", s).lstrip()
 
 
-def parse_set_model(content):
-    """Extract the current model id/label from a /model command-stdout content block.
+def session_id_from_transcript(transcript):
+    """The session id is the transcript filename without its .jsonl suffix."""
+    b = os.path.basename(transcript or "")
+    return b[:-6] if b.endswith(".jsonl") else b
 
-    Returns the cleaned model string (last switch wins = current), or None. Only trusts
-    real `<local-command-stdout>` blocks, never message prose. Handles both observed
-    formats:
-      raw id      -> "Set model to claude-opus-4-8[1m]</local-command-stdout>"
-      friendly    -> "Set model to \\x1b[1mOpus 4.8 (1M context)\\x1b[22m and saved as ..."
 
-    A real switch is a message whose content STARTS WITH `<local-command-stdout>` (the whole
-    content is the command block). Requiring `startswith` — not just "contains" — rejects
-    prose/code/tool-output that merely quotes the phrase (e.g. a session about this tool,
-    where the literal text "\\x1b[1m" appears un-stripped because it isn't a real ESC byte).
-    """
-    if not content.lstrip().startswith("<local-command-stdout>"):
+def cached_window(transcript):
+    """Authoritative context-window size the statusLine sensor cached for THIS session
+    (keyed by session id = transcript basename). Returns the int token size, or None if the
+    cache is absent/unreadable (cold start before the first status render)."""
+    try:
+        path = os.path.join(CACHE_DIR, f"mimir-meter-{session_id_from_transcript(transcript)}.json")
+        with open(path) as f:
+            w = json.load(f).get("context_window_size")
+        return int(w) if w else None
+    except Exception:
         return None
-    text = strip_ansi(content)
-    model = None
-    # Non-greedy capture bounded by the first terminator (closing tag, the trailing
-    # "and saved..." prose, or newline/end) so each switch is matched separately and the
-    # LAST one wins. Then drop a trailing "(default)" note.
-    for mm in re.finditer(r"Set model to\s+(.+?)(?=</|\band saved\b|[\r\n]|$)", text):
-        rest = re.sub(r"\s*\(default\)\s*$", "", mm.group(1).strip()).strip()
-        if rest and not rest.startswith("<"):   # skip the "<id>" prose placeholder
-            model = rest
-    return model
 
 
-def window_for_model(model_str):
-    """200k vs 1M from a model id/label. `[1m]` suffix or '1M context' label => 1M."""
-    low = (model_str or "").lower()
-    return WIN_1M if ("[1m]" in low or "1m context" in low) else WIN_BASE
-
-
-def resolve(used, set_model, msg_model, lmu_1m):
-    """Pure window resolution. Returns (window, src, current_model_str).
-
-    lmu_1m is the precomputed tier-2 result (True / False / None) so this stays pure and
-    unit-testable. The used>200k backstop is applied last and overrides any 200k call.
-    """
-    if set_model is not None:                                    # tier 1
-        return _backstop(used, window_for_model(set_model), "model-log", set_model)
-    base = (msg_model or "").replace("[1m]", "")
-    if lmu_1m is True:                                           # tier 2
-        return _backstop(used, WIN_1M, "lastModelUsage", base + "[1m]")
-    if lmu_1m is None:                                           # tier 3 (ambiguous/unknown)
-        return _backstop(used, WIN_BASE, "lookup?", msg_model)
-    return _backstop(used, WIN_BASE, "base-default", msg_model)
-
-
-def _backstop(used, window, src, current):
-    # A context cannot exceed its window; >200k used => the window is the 1M variant.
-    if window == WIN_BASE and used > WIN_BASE:
-        window, src = WIN_1M, src + "+used>200k"
-    return window, src, current
+def resolve_window(used, cached, default):
+    """Resolve the window. The authoritative cache wins; else the configured default (tagged
+    not-measured). A physical backstop bumps to 1M if usage somehow exceeds the resolved
+    window — a safety net for the default path; it cannot fire against the authoritative cache.
+    Returns (window, src)."""
+    if cached:
+        window, src = cached, "statusline"
+    else:
+        window, src = default, "default"
+    if used > window:
+        window, src = WIN_1M, src + "+used>" + fmt(window)
+    return window, src
 
 
 def is_user_prompt(o):
@@ -152,7 +142,10 @@ def is_user_prompt(o):
 
 
 def read(transcript):
-    usage = msg_model = set_model = cwd = None
+    """Parse the transcript for the last usage block, the turn boundaries (for burn), and the
+    last seen message.model (bare id, for display). The window is NOT derived here — it comes
+    from the statusLine sensor cache (see cached_window)."""
+    usage = msg_model = None
     cur_total = 0
     boundaries = []   # context-token total at each genuine user-prompt (turn) boundary
     with open(transcript) as f:
@@ -161,7 +154,6 @@ def read(transcript):
                 o = json.loads(line)
             except Exception:
                 continue
-            cwd = o.get("cwd") or cwd
             if is_user_prompt(o):
                 boundaries.append(cur_total)   # = end-of-previous-turn total
             m = o.get("message", {}) or {}
@@ -173,33 +165,7 @@ def read(transcript):
                 cur_total = tokens(u)
             if m.get("model"):
                 msg_model = m["model"]
-            c = m.get("content", "")
-            if isinstance(c, list):
-                c = " ".join(x.get("text", "") if isinstance(x, dict) else str(x) for x in c)
-            if isinstance(c, str):
-                pm = parse_set_model(c)
-                if pm:
-                    set_model = pm   # last wins = current
-    return usage, boundaries, msg_model, set_model, cwd
-
-
-def project_used_1m(cwd, base):
-    """Tier 2: did this project ever use the [1m] variant of `base`? (ambiguity-aware)"""
-    if not cwd or not base:
-        return None
-    try:
-        d = json.load(open(os.path.expanduser("~/.claude.json")))
-    except Exception:
-        return None
-    lmu = (d.get("projects", {}).get(cwd, {}) or {}).get("lastModelUsage", {}) or {}
-    keys = list(lmu.keys())
-    has_1m = (base + "[1m]") in keys
-    has_base = base in keys
-    if has_1m and not has_base:
-        return True            # unambiguous: only the 1M variant used here
-    if has_1m and has_base:
-        return None            # ambiguous: both used, no /model this session -> can't tell
-    return False if has_base else None
+    return usage, boundaries, msg_model
 
 
 def parse_threshold(spec):
@@ -257,18 +223,16 @@ def main():
     else:
         transcript = args[0]
 
-    usage, boundaries, msg_model, set_model, cwd = read(transcript)
+    usage, boundaries, msg_model = read(transcript)
     if not usage:
         print("no usage block found", file=sys.stderr); sys.exit(1)
     used = tokens(usage)
     last_burn, avg_burn = burn_stats(boundaries, BURN_WINDOW)
 
-    base = (msg_model or "").replace("[1m]", "")
-    lmu_1m = None if set_model is not None else project_used_1m(cwd, base)
-    window, src, current = resolve(used, set_model, msg_model, lmu_1m)
+    window, src = resolve_window(used, cached_window(transcript), DEFAULT_WINDOW)
 
     pct = used / window * 100
-    disp = (current or "?").replace("[1m]", "").removeprefix("claude-")
+    disp = (msg_model or "?").replace("[1m]", "").removeprefix("claude-")
     if last_burn is None:
         burn_str = ""
     else:
@@ -276,7 +240,7 @@ def main():
         burn_str = f"  burn {sgn(last_burn)}"                      # line-1 fact: the last turn's actual burn
         if min(BURN_WINDOW, len(boundaries) - 1) >= 2:            # >1 turn averaged -> emit the smoothed rate
             burn_str += f"  avg ~{sgn(round(avg_burn))}/turn"     # projection basis for the cost: line
-    measured = src.split("+")[0] in ("model-log", "lastModelUsage") or "used>200k" in src
+    measured = src.split("+")[0] == "statusline" or "used>" in src
     note = "" if measured else f"  (window={src} — not measured)"
     zone = "surface" if in_surface_zone(used, window, SURFACE_THRESHOLD) else "quiet"
     print(f"{fmt(used)} / {fmt(window)} ({pct:.1f}%)  model={disp}{burn_str}  "

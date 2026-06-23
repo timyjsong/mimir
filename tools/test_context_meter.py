@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Unit tests for context-meter's pure detection logic.
+"""Unit tests for context-meter's pure logic.
 
-Tests the parse/resolve functions in isolation (no `claude -p`, no live transcripts) using
-the REAL `/model` stdout strings observed across this machine's transcripts plus synthetic
-edge cases. Run: python3 tools/test_context_meter.py
+The window now comes from the statusLine sensor cache (the harness's authoritative
+`context_window_size`), not from inferring it off `/model` prose or lastModelUsage history —
+so the tests cover cache read, the resolve/default/backstop logic, and the transcript parse
+(usage + burn boundaries). Run: python3 tools/test_context_meter.py
 """
 import importlib.util, os, json, tempfile, unittest
 
@@ -18,77 +19,102 @@ LCS = "local-command-stdout"
 
 
 def block(inner):
-    """Wrap a body in a realistic <local-command-stdout> block."""
+    """Wrap a body in a realistic <local-command-stdout> block (used to assert such blocks
+    are NOT mistaken for genuine user prompts)."""
     return f"<{LCS}>{inner}</{LCS}>"
 
 
-class StripAnsi(unittest.TestCase):
-    def test_bold_wrap(self):
-        self.assertEqual(cm.strip_ansi("\x1b[1mOpus 4.8\x1b[22m"), "Opus 4.8")
+class ParseWindow(unittest.TestCase):
+    def test_m(self):
+        self.assertEqual(cm.parse_window("1M"), M1)
+        self.assertEqual(cm.parse_window("1m"), M1)
 
-    def test_plain_untouched(self):
-        self.assertEqual(cm.strip_ansi("claude-opus-4-8[1m]"), "claude-opus-4-8[1m]")
+    def test_k(self):
+        self.assertEqual(cm.parse_window("200K"), MB)
+        self.assertEqual(cm.parse_window("200k"), MB)
 
-    def test_multiple_codes(self):
-        self.assertEqual(cm.strip_ansi("\x1b[0m\x1b[1mX\x1b[22m\x1b[39m"), "X")
+    def test_raw_tokens(self):
+        self.assertEqual(cm.parse_window("1000000"), M1)
+        self.assertEqual(cm.parse_window("200000"), MB)
+
+    def test_garbage_uses_fallback(self):
+        self.assertEqual(cm.parse_window("nonsense"), M1)        # default fallback = 1M
+        self.assertEqual(cm.parse_window(""), M1)
+        self.assertEqual(cm.parse_window(None), M1)
+
+    def test_explicit_fallback(self):
+        self.assertEqual(cm.parse_window("junk", fallback=MB), MB)
 
 
-class ParseSetModel(unittest.TestCase):
-    # --- raw-id format (observed) ---
-    def test_raw_opus_1m(self):
-        self.assertEqual(cm.parse_set_model(block("Set model to claude-opus-4-8[1m]")),
-                         "claude-opus-4-8[1m]")
+class CachedWindow(unittest.TestCase):
+    """The authoritative window read from the sensor cache, keyed by session id = transcript
+    basename. This is the load-bearing path: the meter trusts it over any inference."""
 
-    def test_raw_opus_base(self):
-        self.assertEqual(cm.parse_set_model(block("Set model to claude-opus-4-8")),
-                         "claude-opus-4-8")
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self._orig = cm.CACHE_DIR
+        cm.CACHE_DIR = self.tmp
+        self.addCleanup(setattr, cm, "CACHE_DIR", self._orig)
 
-    def test_raw_sonnet_base(self):
-        self.assertEqual(cm.parse_set_model(block("Set model to claude-sonnet-4-6")),
-                         "claude-sonnet-4-6")
+    def _cache(self, sid, payload):
+        with open(os.path.join(self.tmp, f"mimir-meter-{sid}.json"), "w") as f:
+            f.write(payload)
 
-    def test_raw_fable_1m(self):
-        self.assertEqual(cm.parse_set_model(block("Set model to claude-fable-5[1m]")),
-                         "claude-fable-5[1m]")
+    def test_reads_1m(self):
+        self._cache("abc", '{"context_window_size": 1000000}')
+        self.assertEqual(cm.cached_window("/p/abc.jsonl"), M1)
 
-    # --- friendly ANSI-wrapped format (observed) — the bug that produced "[1mOpus" ---
-    def test_friendly_opus_1m(self):
-        c = block("Set model to \x1b[1mOpus 4.8 (1M context)\x1b[22m and saved as your default model")
-        self.assertEqual(cm.parse_set_model(c), "Opus 4.8 (1M context)")
+    def test_reads_200k(self):
+        self._cache("abc", '{"context_window_size": 200000}')
+        self.assertEqual(cm.cached_window("/p/abc.jsonl"), MB)
 
-    def test_friendly_opus_1m_default(self):
-        c = block("Set model to \x1b[1mOpus 4.8 (1M context) (default)\x1b[22m and saved as your default model")
-        self.assertEqual(cm.parse_set_model(c), "Opus 4.8 (1M context)")
+    def test_basename_keys_the_lookup(self):
+        # session id is the transcript filename without .jsonl, regardless of directory
+        self._cache("sess-1", '{"context_window_size": 1000000}')
+        self.assertEqual(cm.cached_window("/any/dir/sess-1.jsonl"), M1)
 
-    def test_friendly_fable_base(self):
-        c = block("Set model to \x1b[1mFable 5\x1b[22m and saved as your default model")
-        self.assertEqual(cm.parse_set_model(c), "Fable 5")
+    def test_absent_is_none(self):
+        self.assertIsNone(cm.cached_window("/p/missing.jsonl"))
 
-    # --- guards ---
-    def test_prose_without_block_ignored(self):
-        # No command-stdout tag => must NOT parse (prose mentioning the phrase).
-        self.assertIsNone(cm.parse_set_model("the docs say: Set model to claude-opus-4-8[1m] each turn"))
+    def test_garbage_json_is_none(self):
+        self._cache("abc", "not json")
+        self.assertIsNone(cm.cached_window("/p/abc.jsonl"))
 
-    def test_id_placeholder_ignored(self):
-        # "<id>" template text inside a block must not be captured as a model.
-        self.assertIsNone(cm.parse_set_model(block("Set model to <id>` from real /model command")))
+    def test_missing_key_is_none(self):
+        self._cache("abc", '{"something_else": 1}')
+        self.assertIsNone(cm.cached_window("/p/abc.jsonl"))
 
-    def test_last_switch_wins(self):
-        c = block("Set model to claude-sonnet-4-6") + " ... " + block("Set model to claude-opus-4-8[1m]")
-        self.assertEqual(cm.parse_set_model(c), "claude-opus-4-8[1m]")
+    def test_zero_is_none(self):
+        # a 0 size is unusable -> treated as absent
+        self._cache("abc", '{"context_window_size": 0}')
+        self.assertIsNone(cm.cached_window("/p/abc.jsonl"))
 
-    def test_meta_session_false_positive_ignored(self):
-        # The real bug from developing this tool: content that QUOTES the format and mentions
-        # "local-command-stdout" elsewhere, with the LITERAL text "\x1b[1m" (not a real ESC
-        # byte). Content does not START with the tag => must be rejected.
-        c = ('LCS = "local-command-stdout"; example: '
-             'Set model to \\x1b[1mOpus 4.8 (1M context)\\x1b[22m and saved as your default model')
-        self.assertIsNone(cm.parse_set_model(c))
 
-    def test_leading_whitespace_ok(self):
-        # A genuine block with leading whitespace still parses (lstrip).
-        self.assertEqual(cm.parse_set_model("\n  " + block("Set model to claude-opus-4-8[1m]")),
-                         "claude-opus-4-8[1m]")
+class ResolveWindow(unittest.TestCase):
+    def test_cache_wins(self):
+        self.assertEqual(cm.resolve_window(50_000, M1, MB), (M1, "statusline"))
+        self.assertEqual(cm.resolve_window(50_000, MB, M1), (MB, "statusline"))
+
+    def test_default_when_no_cache(self):
+        # THE BUG REGRESSION: no authoritative window, default is 1M -> NOT 200K.
+        self.assertEqual(cm.resolve_window(50_000, None, M1), (M1, "default"))
+
+    def test_default_can_be_200k(self):
+        self.assertEqual(cm.resolve_window(50_000, None, MB), (MB, "default"))
+
+    def test_backstop_bumps_default_200k_over(self):
+        # default 200K but usage exceeds it -> physically must be 1M
+        w, src = cm.resolve_window(250_000, None, MB)
+        self.assertEqual(w, M1)
+        self.assertIn("used>200K", src)
+
+    def test_no_backstop_when_cache_1m(self):
+        self.assertEqual(cm.resolve_window(250_000, M1, M1), (M1, "statusline"))
+
+    def test_no_backstop_under_window(self):
+        w, src = cm.resolve_window(150_000, None, MB)
+        self.assertEqual(w, MB)
+        self.assertNotIn("used>", src)
 
 
 class StripSystemReminders(unittest.TestCase):
@@ -143,74 +169,9 @@ class IsUserPrompt(unittest.TestCase):
         self.assertFalse(cm.is_user_prompt({"type": "assistant", "message": {"role": "assistant", "content": "x"}}))
 
 
-class WindowForModel(unittest.TestCase):
-    def test_raw_1m_suffix(self):
-        self.assertEqual(cm.window_for_model("claude-opus-4-8[1m]"), M1)
-
-    def test_friendly_1m_label(self):
-        self.assertEqual(cm.window_for_model("Opus 4.8 (1M context)"), M1)
-
-    def test_base_id(self):
-        self.assertEqual(cm.window_for_model("claude-opus-4-8"), MB)
-
-    def test_friendly_base_label(self):
-        self.assertEqual(cm.window_for_model("Fable 5"), MB)
-
-    def test_none(self):
-        self.assertEqual(cm.window_for_model(None), MB)
-
-
-class Resolve(unittest.TestCase):
-    def test_tier1_raw_1m(self):
-        self.assertEqual(cm.resolve(50_000, "claude-opus-4-8[1m]", None, None),
-                         (M1, "model-log", "claude-opus-4-8[1m]"))
-
-    def test_tier1_friendly_1m(self):
-        # The end-to-end fix for the "[1mOpus / 200k" bug, at the resolver level.
-        self.assertEqual(cm.resolve(50_000, "Opus 4.8 (1M context)", None, None),
-                         (M1, "model-log", "Opus 4.8 (1M context)"))
-
-    def test_tier1_base(self):
-        self.assertEqual(cm.resolve(50_000, "claude-sonnet-4-6", None, None),
-                         (MB, "model-log", "claude-sonnet-4-6"))
-
-    def test_tier2_lastmodelusage(self):
-        self.assertEqual(cm.resolve(50_000, None, "claude-opus-4-8", True),
-                         (M1, "lastModelUsage", "claude-opus-4-8[1m]"))
-
-    def test_tier3_ambiguous(self):
-        self.assertEqual(cm.resolve(50_000, None, "claude-fable-5", None),
-                         (MB, "lookup?", "claude-fable-5"))
-
-    def test_tier3_base_default(self):
-        self.assertEqual(cm.resolve(50_000, None, "claude-sonnet-4-6", False),
-                         (MB, "base-default", "claude-sonnet-4-6"))
-
-    # --- the used>200k backstop: the "169.8%" bug ---
-    def test_backstop_fixes_169pct(self):
-        w, src, cur = cm.resolve(339_584, None, "claude-fable-5", None)
-        self.assertEqual(w, M1)
-        self.assertIn("used>200k", src)
-        self.assertLess(339_584 / w * 100, 100.0)   # no longer >100%
-
-    def test_backstop_on_base_default(self):
-        w, src, _ = cm.resolve(250_000, None, "claude-opus-4-8", False)
-        self.assertEqual(w, M1)
-        self.assertEqual(src, "base-default+used>200k")
-
-    def test_backstop_not_applied_when_already_1m(self):
-        # Already 1M via lastModelUsage => no redundant "+used>200k" tag.
-        self.assertEqual(cm.resolve(250_000, None, "claude-opus-4-8", True),
-                         (M1, "lastModelUsage", "claude-opus-4-8[1m]"))
-
-    def test_no_backstop_under_200k(self):
-        w, src, _ = cm.resolve(150_000, None, "claude-fable-5", None)
-        self.assertEqual(w, MB)
-        self.assertNotIn("used>200k", src)
-
-
 class ReadIntegration(unittest.TestCase):
-    """read() does the file I/O + per-line accumulation; test it on a synthetic transcript."""
+    """read() does the file I/O + per-line accumulation; test it on a synthetic transcript.
+    It returns (usage, boundaries, msg_model) — the window is NOT derived here (sensor cache)."""
 
     def _write(self, lines):
         fd, path = tempfile.mkstemp(suffix=".jsonl")
@@ -220,28 +181,23 @@ class ReadIntegration(unittest.TestCase):
         self.addCleanup(os.unlink, path)
         return path
 
-    def test_reads_usage_model_and_switch(self):
+    def test_reads_usage_and_model(self):
         path = self._write([
             {"cwd": "/home/tim/projects/mimir",
              "message": {"model": "claude-opus-4-8",
                          "usage": {"input_tokens": 10, "cache_creation_input_tokens": 5,
                                    "cache_read_input_tokens": 100_000}}},
-            {"message": {"content": [
-                {"text": block("Set model to \x1b[1mOpus 4.8 (1M context)\x1b[22m and saved as your default model")}]}},
         ])
-        usage, _b, msg_model, set_model, cwd = cm.read(path)
-        self.assertEqual(set_model, "Opus 4.8 (1M context)")
+        usage, _b, msg_model = cm.read(path)
         self.assertEqual(msg_model, "claude-opus-4-8")
-        self.assertEqual(cwd, "/home/tim/projects/mimir")
-        used = usage["input_tokens"] + usage["cache_creation_input_tokens"] + usage["cache_read_input_tokens"]
-        self.assertEqual(cm.resolve(used, set_model, msg_model, None)[0], M1)
+        self.assertEqual(cm.tokens(usage), 100_015)
 
     def test_last_usage_block_wins(self):
         path = self._write([
             {"message": {"usage": {"input_tokens": 1, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
             {"message": {"usage": {"input_tokens": 9, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
         ])
-        usage, boundaries, *_ = cm.read(path)
+        usage, _boundaries, _model = cm.read(path)
         self.assertEqual(usage["input_tokens"], 9)
 
     def test_turn_boundaries_for_burn(self):
@@ -253,7 +209,7 @@ class ReadIntegration(unittest.TestCase):
             {"type": "user", "message": {"role": "user", "content": "again"}},
             {"message": {"usage": {"input_tokens": 400, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
         ])
-        usage, boundaries, *_ = cm.read(path)
+        _usage, boundaries, _model = cm.read(path)
         self.assertEqual(boundaries, [0, 100, 250])
         self.assertEqual(boundaries[-1] - boundaries[-2], 150)   # previous completed turn's burn
 
@@ -265,30 +221,8 @@ class ReadIntegration(unittest.TestCase):
             {"type": "user", "message": {"role": "user", "content": "<local-command-stdout>Set model to claude-opus-4-8[1m]</local-command-stdout>"}},
             {"message": {"usage": {"input_tokens": 200, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
         ])
-        usage, boundaries, *_ = cm.read(path)
+        _usage, boundaries, _model = cm.read(path)
         self.assertEqual(boundaries, [0])   # only the one genuine prompt
-
-    def test_midsession_model_switch(self):
-        # opus -> sonnet mid-session: meter must report the POST-switch model + window
-        path = self._write([
-            {"message": {"model": "claude-opus-4-8", "usage": {"input_tokens": 50, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
-            {"type": "user", "message": {"role": "user", "content": block("Set model to claude-sonnet-4-6")}},
-            {"message": {"model": "claude-sonnet-4-6", "usage": {"input_tokens": 60, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
-        ])
-        usage, boundaries, msg_model, set_model, cwd = cm.read(path)
-        self.assertEqual(set_model, "claude-sonnet-4-6")
-        self.assertEqual(cm.resolve(cm.tokens(usage), set_model, msg_model, None), (MB, "model-log", "claude-sonnet-4-6"))
-
-    def test_midsession_window_switch_up(self):
-        # opus base -> opus[1m]: window flips 200K -> 1M post-switch
-        path = self._write([
-            {"message": {"model": "claude-opus-4-8", "usage": {"input_tokens": 50, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
-            {"type": "user", "message": {"role": "user", "content": block("Set model to claude-opus-4-8[1m]")}},
-            {"message": {"model": "claude-opus-4-8", "usage": {"input_tokens": 60, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
-        ])
-        usage, boundaries, msg_model, set_model, cwd = cm.read(path)
-        self.assertEqual(set_model, "claude-opus-4-8[1m]")
-        self.assertEqual(cm.resolve(cm.tokens(usage), set_model, msg_model, None)[0], M1)
 
     def test_synthetic_entry_skipped(self):
         # An interrupt writes a <synthetic> placeholder at the tail; it must NOT become
@@ -299,20 +233,51 @@ class ReadIntegration(unittest.TestCase):
             {"message": {"model": "<synthetic>",
                          "usage": {"input_tokens": 0, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
         ])
-        usage, _b, msg_model, _sm, _cwd = cm.read(path)
+        usage, _b, msg_model = cm.read(path)
         self.assertEqual(cm.tokens(usage), 50_000)   # the real turn, not the synthetic 0
         self.assertEqual(msg_model, "claude-opus-4-8")
 
-    def test_midsession_window_switch_down(self):
-        # opus[1m] -> opus base (two switches): last wins, window 1M -> 200K (used < 200K, no backstop)
-        path = self._write([
-            {"type": "user", "message": {"role": "user", "content": block("Set model to claude-opus-4-8[1m]")}},
-            {"type": "user", "message": {"role": "user", "content": block("Set model to claude-opus-4-8")}},
-            {"message": {"model": "claude-opus-4-8", "usage": {"input_tokens": 50, "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}}},
-        ])
-        usage, boundaries, msg_model, set_model, cwd = cm.read(path)
-        self.assertEqual(set_model, "claude-opus-4-8")
-        self.assertEqual(cm.resolve(cm.tokens(usage), set_model, msg_model, None)[0], MB)
+
+class EndToEnd(unittest.TestCase):
+    """read() + cached_window + resolve_window together — the actual reported window."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self._orig = cm.CACHE_DIR
+        cm.CACHE_DIR = self.tmp
+        self.addCleanup(setattr, cm, "CACHE_DIR", self._orig)
+
+    def _transcript(self, sid, used):
+        path = os.path.join(self.tmp, f"{sid}.jsonl")
+        with open(path, "w") as f:
+            f.write(json.dumps({"message": {"model": "claude-opus-4-8",
+                    "usage": {"input_tokens": used, "cache_creation_input_tokens": 0,
+                              "cache_read_input_tokens": 0}}}) + "\n")
+        return path
+
+    def _resolve(self, path):
+        usage, _b, _m = cm.read(path)
+        return cm.resolve_window(cm.tokens(usage), cm.cached_window(path), cm.DEFAULT_WINDOW)
+
+    def test_authoritative_1m(self):
+        path = self._transcript("s1", 120_000)
+        with open(os.path.join(self.tmp, "mimir-meter-s1.json"), "w") as f:
+            f.write('{"context_window_size": 1000000}')
+        self.assertEqual(self._resolve(path), (M1, "statusline"))
+
+    def test_authoritative_200k(self):
+        # a genuine 200K session is reported as 200K — a measurement, not a default
+        path = self._transcript("s2", 120_000)
+        with open(os.path.join(self.tmp, "mimir-meter-s2.json"), "w") as f:
+            f.write('{"context_window_size": 200000}')
+        self.assertEqual(self._resolve(path), (MB, "statusline"))
+
+    def test_cold_start_defaults_1m_not_200k(self):
+        # THE ORIGINAL BUG: no cache yet -> must read 1M, never 200K.
+        path = self._transcript("s3", 120_000)
+        w, src = self._resolve(path)
+        self.assertEqual(w, M1)
+        self.assertEqual(src, "default")
 
 
 class BurnStats(unittest.TestCase):
