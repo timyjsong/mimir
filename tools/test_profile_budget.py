@@ -12,6 +12,8 @@ def run(payload, env=None):
     e = dict(os.environ)
     e.pop("MIMIR_NO_GUARD", None)
     e.pop("MIMIR_NO_METER", None)
+    e["MIMIR_PROFILE_HARDCAP"] = str(CAP)   # pin so the test is independent of the hook default
+    e["MIMIR_PROFILE_HARDLINES"] = "120"
     if env:
         e.update(env)
     p = subprocess.run([sys.executable, HOOK], input=json.dumps(payload),

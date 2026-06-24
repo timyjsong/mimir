@@ -11,8 +11,8 @@
 # consolidation is never blocked even when already over. Mirror of memory-budget-hook.py.
 # FAIL-OPEN: any uncertainty/error -> allow. Eval-guarded by MIMIR_NO_GUARD / MIMIR_NO_METER.
 #
-# Caps tunable: MIMIR_PROFILE_HARDCAP (bytes, default 6500 ~= 1.6K tokens),
-# MIMIR_PROFILE_HARDLINES (default 120). Lean, but not as tight as the 600-tok resident docs.
+# Caps tunable: MIMIR_PROFILE_HARDCAP (bytes, default 11000 ~= 2.75K tokens — lean, with
+# headroom over the ~2.2K consolidated baseline), MIMIR_PROFILE_HARDLINES (default 120).
 import json, os, sys
 
 
@@ -56,7 +56,7 @@ try:
     else:
         allow()  # MultiEdit / other -> fail open
 
-    HARD_BYTES = int(os.environ.get("MIMIR_PROFILE_HARDCAP", "6500"))
+    HARD_BYTES = int(os.environ.get("MIMIR_PROFILE_HARDCAP", "11000"))
     HARD_LINES = int(os.environ.get("MIMIR_PROFILE_HARDLINES", "120"))
     grew_b = new_bytes > cur_bytes and new_bytes > HARD_BYTES
     grew_l = new_lines > cur_lines and new_lines > HARD_LINES
