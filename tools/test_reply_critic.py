@@ -14,8 +14,11 @@ for _f in glob.glob(os.path.join(tempfile.gettempdir(), "mimir-critic-*.json")):
         pass
 
 
-def U(text):
-    return {"type": "user", "message": {"role": "user", "content": text}}
+def U(text, uid=None):
+    o = {"type": "user", "message": {"role": "user", "content": text}}
+    if uid:
+        o["uuid"] = uid
+    return o
 
 
 def A(text):
@@ -54,8 +57,11 @@ def run(rows_or_path, block=False, sid="s1"):
 
 
 fails = []
+checks = 0
 
 def expect(label, got, want):
+    global checks
+    checks += 1
     if got != want:
         fails.append((label, want, got))
 
@@ -105,6 +111,15 @@ with open(p, "a") as f:
 third = run(p, block=True, sid="loopsid")
 expect("loop-guard: new turn re-blocks", third, ("block", True))
 
+# C1 regression: a sliding tail window (earliest user row dropped) must NOT re-block the same turn.
+# Old count-keyed guard would: count drops 2->1 != stored. uuid-keyed guard holds.
+c1_full = [U("earlier ask", "uA"), A("ok"), U("fix the bug", "uB"), A("Done — all tests pass.")]
+c1a = run(c1_full, block=True, sid="c1sid")  # blocks, stores turn_uid=uB
+c1_slid = [A("ok"), U("fix the bug", "uB"), A("Done — all tests pass.")]  # U('earlier') slid out
+c1b = run(c1_slid, block=True, sid="c1sid")  # same turn (uB present) -> must approve, not re-block
+expect("C1: first blocks", c1a, ("block", True))
+expect("C1: window slide does NOT re-block", c1b, ("approve", False))
+
 # --- fail-open / guards
 e = dict(os.environ); e.pop("MIMIR_NO_GUARD", None); e.pop("MIMIR_NO_METER", None)
 p1 = subprocess.run([sys.executable, HOOK], input=json.dumps({"transcript_path": "/no/such/file"}),
@@ -119,10 +134,10 @@ pg = subprocess.run([sys.executable, HOOK], input=json.dumps(
     capture_output=True, text=True, env=eg)
 expect("eval-guard -> silent approve", (pg.stdout.strip() == ""), True)
 
-total = 16
+total = checks
 if fails:
     print("FAIL %d/%d:" % (len(fails), total))
     for label, want, got in fails:
         print("  [%s] want %r got %r" % (label, want, got))
     sys.exit(1)
-print("PASS %d/%d (advisory, block, loop-guard, fail-open all verified)" % (total, total))
+print("PASS %d/%d (advisory, block, loop-guard, C1 slide, fail-open all verified)" % (total, total))

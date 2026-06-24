@@ -47,6 +47,9 @@ CASES = [
     # mutual exclusion
     ("delete the table", {"destruct"}),          # not scale
     ("what's the status?", {"derive"}),          # not scale
+    # M5: code-edit deletes are NOT destructive (no weighty object)
+    ("delete this line", {"scale"}),
+    ("remove the unused import", {"scale"}),
     # nothing
     ("here's a long description of a feature I want you to build with several parts and details", set()),
     ("", set()),
@@ -68,7 +71,14 @@ p = subprocess.run([sys.executable, HOOK], input=json.dumps({"user_prompt": "del
 if p.stdout.strip():
     fails.append(("<eval-guard>", "silent", p.stdout))
 
-total = len(CASES) + 2
+# M7: hook must also read the 'prompt' key (not only 'user_prompt') -> can't be a silent no-op
+e7 = dict(os.environ); e7.pop("MIMIR_NO_GUARD", None); e7.pop("MIMIR_NO_METER", None)
+p7 = subprocess.run([sys.executable, HOOK], input=json.dumps({"prompt": "what's the state?"}),
+                    capture_output=True, text=True, env=e7)
+if "State/orientation" not in p7.stdout:
+    fails.append(("<M7 prompt-key>", "derive cue via 'prompt' key", p7.stdout))
+
+total = len(CASES) + 3
 if fails:
     print("FAIL %d/%d:" % (len(fails), total))
     for prompt, exp, got in fails:

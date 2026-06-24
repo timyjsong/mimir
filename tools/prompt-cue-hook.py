@@ -23,7 +23,9 @@ def main():
     if os.environ.get("MIMIR_NO_GUARD") or os.environ.get("MIMIR_NO_METER"):
         nothing()
     data = json.load(sys.stdin)
-    prompt = (data.get("user_prompt") or "").strip()
+    # CC's UserPromptSubmit stdin key is documented as user_prompt, but read both so a key
+    # mismatch can't silently make this a no-op.
+    prompt = (data.get("prompt") or data.get("user_prompt") or "").strip()
     if not prompt:
         nothing()
     low = prompt.lower()
@@ -36,9 +38,16 @@ def main():
         cards.append("[cue] State/orientation question — reconstruct from disk + git first; "
                      "don't answer from memory, and verify load-bearing facts before asserting.")
 
-    destructive = re.search(
-        r"\b(delete|remove|rm\s+-[a-z]*r[a-z]*|wipe|drop\s+(the\s+)?(database|table|schema)|"
-        r"force[- ]push|reset\s+--hard|nuke|purge|tear down|destroy|deploy(\s+to)?\s+prod)\b", low)
+    # Standalone-scary verbs, OR a delete/remove/wipe/drop aimed at a WEIGHTY object. The weighty
+    # gate keeps ordinary code edits ("delete this line", "remove the unused import") from firing.
+    scary = re.search(
+        r"\b(rm\s+-[a-z]*r[a-z]*|force[- ]push|reset\s+--hard|nuke|purge|tear down|"
+        r"destroy|deploy(\s+to)?\s+prod)\b", low)
+    weighty = re.search(
+        r"\b(delete|remove|wipe|drop|clear)\b[^\n]{0,24}\b(database|table|schema|branch|"
+        r"prod|production|repo|repositor|director|folder|everything|server|deployment|"
+        r"volume|bucket|namespace|cluster|migration)\b", low)
+    destructive = scary or weighty
     if destructive:
         cards.append("[cue] You're being asked to do something irreversible / outward-facing — "
                      "confirm the target and that it's recoverable; gate unless the user has engaged "

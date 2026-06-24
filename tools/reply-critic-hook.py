@@ -14,7 +14,7 @@
 #
 # FAIL-OPEN: any error -> approve (exit 0, no output). A broken critic must never trap a turn.
 # Eval-guarded by MIMIR_NO_GUARD / MIMIR_NO_METER. Transcript read is tail-bounded for speed.
-import json, os, re, sys, tempfile
+import json, os, re, sys, tempfile, hashlib
 
 TAIL_BYTES = 1_000_000  # bound work per stop (server-cognizant)
 
@@ -95,9 +95,9 @@ def main():
     if not rows:
         approve()
 
-    # turn_id = number of genuine user turns seen (used for the once-per-turn loop guard)
-    turn_id = sum(1 for o in rows if genuine_user(o))
-    # last genuine-user index -> everything after it is THIS turn
+    # last genuine-user index -> everything after it is THIS turn. The user row's STABLE uuid
+    # (not a window-relative count) keys the loop guard, so a sliding tail window on a multi-MB
+    # transcript can never make the guard re-block the same turn.
     last_u = max((i for i, o in enumerate(rows) if genuine_user(o)), default=-1)
     turn = rows[last_u + 1:]
 
@@ -134,18 +134,21 @@ def main():
         print(json.dumps({"decision": "approve", "systemMessage": nudge}))
         return
 
-    # block mode: fire at most once per user-turn (loop guard)
+    # block mode: fire AT MOST ONCE per user-turn (loop guard), keyed on the user row's STABLE id.
+    if last_u < 0:
+        approve()  # no user row in the tail window -> can't establish a stable turn id; never risk a loop
+    u = rows[last_u]
+    turn_uid = u.get("uuid") or hashlib.sha1(
+        json.dumps(u, sort_keys=True).encode("utf-8", "replace")).hexdigest()
     sid = data.get("session_id") or os.path.basename(tpath)
-    statef = os.path.join(tempfile.gettempdir(), "mimir-critic-%s.json" % re.sub(r"\W", "_", sid))
-    last_blocked = None
+    statef = os.path.join(tempfile.gettempdir(), "mimir-critic-%s.json" % re.sub(r"\W", "_", str(sid)))
     try:
-        last_blocked = json.load(open(statef)).get("turn_id")
+        if json.load(open(statef)).get("turn_uid") == turn_uid:
+            approve()  # already nudged this turn -> let the revision through
     except Exception:
         pass
-    if last_blocked == turn_id:
-        approve()  # already nudged this turn -> let the revision through
     try:
-        json.dump({"turn_id": turn_id}, open(statef, "w"))
+        json.dump({"turn_uid": turn_uid}, open(statef, "w"))
     except Exception:
         pass
     print(json.dumps({"decision": "block", "reason": nudge}))
