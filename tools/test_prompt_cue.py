@@ -28,6 +28,7 @@ def cues(prompt):
 # (prompt, expected set of cue tags)
 CASES = [
     ("what's the state of the build?", {"derive"}),
+    ("what is the state of the build?", {"derive"}),
     ("where are we", {"derive"}),
     ("catch me up", {"derive"}),
     ("get caught up on where we left off", {"derive"}),

@@ -32,7 +32,7 @@ def main():
     cards = []
 
     derive = re.search(
-        r"\b(what'?s the (state|status)|where are we|where did we leave off|catch (me )?up|"
+        r"\b(what(?:'?s| is| are) the (state|status)|where are we|where did we leave off|catch (me )?up|"
         r"get caught up|bring me up to speed|orient( me)?|status update)\b", low)
     if derive:
         cards.append("[cue] State/orientation question — reconstruct from disk + git first; "
